@@ -5,711 +5,472 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>ATL · APEX — Signal Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Chakra+Petch:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
 <style>
-/* ═══════════════════════════════════════════
-   TOKENS
-═══════════════════════════════════════════ */
 :root {
-  --bg:       #080a06;
-  --bg2:      #0d1009;
-  --bg3:      #12160e;
-  --bg4:      #181e12;
-  --border:   rgba(180,210,80,0.10);
-  --border2:  rgba(180,210,80,0.18);
-  --lime:     #c8f135;
-  --lime-dim: rgba(200,241,53,0.10);
-  --lime-glow:rgba(200,241,53,0.25);
-  --red:      #ff4c2e;
-  --red-dim:  rgba(255,76,46,0.10);
-  --amber:    #f5a623;
-  --amber-dim:rgba(245,166,35,0.10);
-  --text:     #d4dcc0;
-  --sub:      #7a8a60;
-  --muted:    #3d4a2e;
-  --font:     'Azeret Mono', monospace;
+  --bg-base:     #070a0f;
+  --bg-card:     #0b0f18;
+  --bg-hover:    #0f1420;
+  --bg-input:    #080c14;
+  --bg-elevated: #111826;
+  --border:      #1a2236;
+  --border-b:    #243050;
+  --accent:      #00d4ff;
+  --accent-dim:  #0099bb;
+  --accent-glow: rgba(0,212,255,0.15);
+  --bull:        #00e676;
+  --bull-dim:    #00a855;
+  --bull-glow:   rgba(0,230,118,0.12);
+  --bear:        #ff3d57;
+  --bear-dim:    #cc2040;
+  --bear-glow:   rgba(255,61,87,0.12);
+  --orange:      #ff9800;
+  --orange-glow: rgba(255,152,0,0.12);
+  --gold:        #ffd54f;
+  --text:        #d0dff0;
+  --text-sec:    #6a85a8;
+  --text-dim:    #3a4f6a;
+  --fd: 'Orbitron', monospace;
+  --fb: 'Chakra Petch', sans-serif;
+  --fm: 'Share Tech Mono', monospace;
+  --r:  4px;
+  --rl: 6px;
 }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg-base);color:var(--text);font-family:var(--fb);font-size:13px;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
-/* ═══════════════════════════════════════════
-   RESET & BASE
-═══════════════════════════════════════════ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 14px; }
-body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100dvh;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-}
+/* BG FX */
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,212,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.025) 1px,transparent 1px);
+  background-size:40px 40px}
+.bg-glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:400px;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse,rgba(0,212,255,0.05) 0%,transparent 70%)}
 
-/* grain overlay */
-body::before {
-  content: '';
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-  opacity: 0.5;
-}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg-base)}
+::-webkit-scrollbar-thumb{background:var(--border-b);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent-dim)}
 
-/* scanlines */
-body::after {
-  content: '';
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.08) 2px,
-    rgba(0,0,0,0.08) 4px
-  );
-}
+/* HEADER */
+.header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:56px;background:rgba(7,10,15,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(12px)}
+.logo{font-family:var(--fd);font-size:1.1rem;font-weight:900;letter-spacing:4px;color:var(--accent);text-shadow:0 0 20px var(--accent)}
+.logo b{color:var(--text-dim);text-shadow:none;font-weight:400}
+.logo-sub{font-family:var(--fm);font-size:0.6rem;color:var(--text-dim);letter-spacing:3px;border-left:1px solid var(--border);padding-left:16px;margin-left:16px}
+.hdr-right{display:flex;align-items:center;gap:20px}
+.status-wrap{display:flex;align-items:center;gap:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim)}
+.status-dot.ready{background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pdot 3s ease-in-out infinite}
+.status-dot.loading{background:var(--orange);box-shadow:0 0 8px var(--orange);animation:pdot .5s ease-in-out infinite}
+.status-dot.ok{background:var(--bull);box-shadow:0 0 8px var(--bull);animation:pdot 2s ease-in-out infinite}
+.status-dot.error{background:var(--bear);box-shadow:0 0 8px var(--bear)}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
+.status-txt{font-family:var(--fm);font-size:0.65rem;color:var(--text-sec);letter-spacing:2px}
+.hdr-time{font-family:var(--fm);font-size:0.85rem;color:var(--accent);letter-spacing:2px;min-width:80px;text-align:right}
 
-/* ═══════════════════════════════════════════
-   LAYOUT
-═══════════════════════════════════════════ */
-#app {
-  position: relative; z-index: 1;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 12px 80px;
-}
+/* MAIN */
+#app{position:relative;z-index:1;padding:20px 24px 80px;max-width:1400px;margin:0 auto}
 
-/* ═══════════════════════════════════════════
-   NAV
-═══════════════════════════════════════════ */
-nav {
-  position: sticky; top: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border);
-  background: rgba(8,10,6,0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
+/* EXCHANGE PANEL */
+.ex-panel{display:flex;align-items:center;gap:16px;background:var(--bg-card);border:1px solid var(--border-b);
+  border-radius:var(--rl);padding:16px 20px;margin-bottom:16px}
+.panel-label{font-family:var(--fm);font-size:0.58rem;color:var(--text-dim);letter-spacing:2px;white-space:nowrap;flex-shrink:0}
+.ex-selector{display:flex;gap:8px}
+.ex-btn{display:flex;align-items:center;gap:10px;background:var(--bg-input);border:1px solid var(--border-b);
+  border-radius:var(--r);padding:12px 28px;cursor:pointer;transition:all .2s;font-family:var(--fd);
+  font-size:0.6rem;font-weight:700;letter-spacing:2px;color:var(--text-dim);position:relative;overflow:hidden}
+.ex-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;transition:opacity .2s;opacity:0}
+.bybit-btn::after{background:var(--accent)}
+.binance-btn::after{background:var(--orange)}
+.bybit-btn:hover{border-color:rgba(0,212,255,0.4);color:var(--accent)}
+.binance-btn:hover{border-color:rgba(255,152,0,0.4);color:var(--orange)}
+.bybit-btn.sel{background:var(--accent-glow);border-color:rgba(0,212,255,0.5);color:var(--accent);box-shadow:0 0 16px rgba(0,212,255,0.08)}
+.bybit-btn.sel::after{opacity:1}
+.binance-btn.sel{background:var(--orange-glow);border-color:rgba(255,152,0,0.5);color:var(--orange);box-shadow:0 0 16px rgba(255,152,0,0.08)}
+.binance-btn.sel::after{opacity:1}
+.ex-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.bybit-btn .ex-dot{background:var(--accent)}
+.binance-btn .ex-dot{background:var(--orange)}
+.ex-btn:not(.sel) .ex-dot{opacity:.25}
+.panel-sep{width:1px;height:36px;background:var(--border);flex-shrink:0;margin:0 4px}
 
-.nav-logo {
-  font-size: 1rem; font-weight: 700; letter-spacing: 0.12em;
-  color: var(--lime); text-transform: uppercase;
-}
-.nav-logo span { color: var(--sub); font-weight: 400; }
+/* SCAN BUTTON */
+.scan-btn{display:flex;align-items:center;gap:10px;background:transparent;border:1px solid var(--border-b);
+  color:var(--text-dim);font-family:var(--fd);font-size:0.65rem;font-weight:700;letter-spacing:3px;
+  padding:11px 28px;border-radius:var(--r);cursor:not-allowed;transition:all .2s;
+  position:relative;overflow:hidden;opacity:.35}
+.scan-btn::before{content:'';position:absolute;inset:0;transform:translateX(-100%);transition:transform .25s ease;z-index:0}
+.scan-btn.en{opacity:1;cursor:pointer}
+.scan-btn.bybit-scan{border-color:var(--accent);color:var(--accent)}
+.scan-btn.bybit-scan::before{background:var(--accent)}
+.scan-btn.bybit-scan.en:hover{color:var(--bg-base);box-shadow:0 0 20px rgba(0,212,255,0.2)}
+.scan-btn.bybit-scan.en:hover::before{transform:translateX(0)}
+.scan-btn.binance-scan{border-color:var(--orange);color:var(--orange)}
+.scan-btn.binance-scan::before{background:var(--orange)}
+.scan-btn.binance-scan.en:hover{color:var(--bg-base);box-shadow:0 0 20px rgba(255,152,0,0.2)}
+.scan-btn.binance-scan.en:hover::before{transform:translateX(0)}
+.scan-btn.loading{opacity:.6;pointer-events:none}
+.scan-btn>*{position:relative;z-index:1}
+.scan-icon{font-size:1rem}
+.scan-btn.loading .scan-icon{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-.nav-right {
-  display: flex; align-items: center; gap: 10px;
-}
+/* PROGRESS */
+.prog-wrap{display:none;margin-bottom:16px}
+.prog-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--bull));border-radius:2px;transition:width .4s ease;width:0%}
+.prog-label{font-family:var(--fm);font-size:0.58rem;color:var(--text-dim);letter-spacing:2px;margin-top:7px;text-align:center}
 
-.nav-pulse {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--lime);
-  box-shadow: 0 0 8px var(--lime);
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-@keyframes pulse-dot {
-  0%,100% { opacity:1; transform:scale(1); }
-  50% { opacity:0.4; transform:scale(0.7); }
-}
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;display:none}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;
+  position:relative;overflow:hidden;transition:border-color .2s}
+.stat-card::after{content:'';position:absolute;top:0;left:0;width:2px;bottom:0}
+.stat-card.sc::after{background:var(--text-dim)}
+.stat-card.sg::after{background:var(--gold)}
+.stat-card.sl::after{background:var(--bull)}
+.stat-card.ss::after{background:var(--bear)}
+.stat-card.sw::after{background:var(--orange)}
+.stat-label{font-family:var(--fm);font-size:0.52rem;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.stat-val{font-family:var(--fd);font-size:1.6rem;font-weight:700;letter-spacing:1px;line-height:1}
+.stat-val.ac{color:var(--accent)}
+.stat-val.gc{color:var(--gold)}
+.stat-val.bc{color:var(--bull)}
+.stat-val.rc{color:var(--bear)}
+.stat-val.oc{color:var(--orange)}
+.stat-val.tc{color:var(--text-sec)}
 
-.nav-clock {
-  font-size: 0.72rem; color: var(--sub); letter-spacing: 0.1em;
-  font-weight: 500;
-}
+/* FILTER + SEARCH BAR */
+.filter-bar{display:none;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.filter-bar.vis{display:flex}
+.filter-group{display:flex;gap:4px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r);padding:4px}
+.f-btn{background:none;border:none;color:var(--text-dim);font-family:var(--fb);font-size:0.68rem;font-weight:600;
+  letter-spacing:1.5px;padding:6px 14px;border-radius:2px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.f-btn:hover{color:var(--text);background:var(--bg-elevated)}
+.f-btn.fa{background:var(--accent);color:var(--bg-base)}
+.f-btn.fb{background:var(--bull-glow);color:var(--bull);border:1px solid rgba(0,230,118,.3)}
+.f-btn.fs{background:var(--bear-glow);color:var(--bear);border:1px solid rgba(255,61,87,.3)}
+.f-btn.fw{background:var(--orange-glow);color:var(--orange);border:1px solid rgba(255,152,0,.3)}
+.f-btn.fm{background:var(--bg-elevated);color:var(--text-sec);border:1px solid var(--border-b)}
+.search-wrap{display:flex;align-items:center;background:var(--bg-input);border:1px solid var(--border-b);
+  border-radius:var(--r);overflow:hidden;transition:border-color .2s;margin-left:auto}
+.search-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
+.search-pfx{font-family:var(--fm);font-size:0.6rem;color:var(--accent-dim);padding:0 10px;letter-spacing:1px;border-right:1px solid var(--border);white-space:nowrap}
+.search-input{background:none;border:none;outline:none;color:var(--text);font-family:var(--fm);font-size:0.8rem;
+  letter-spacing:2px;padding:9px 12px;width:130px;text-transform:uppercase}
+.search-input::placeholder{color:var(--text-dim)}
 
-/* ═══════════════════════════════════════════
-   CONTROL BAR
-═══════════════════════════════════════════ */
-.ctrl-bar {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  margin-top: 1px;
-  background: var(--border);
-  border: 1px solid var(--border);
-}
+/* RESULT META */
+.result-meta{display:none;justify-content:space-between;align-items:center;margin-bottom:12px}
+.result-meta.vis{display:flex}
+.result-count{font-family:var(--fm);font-size:0.6rem;color:var(--text-dim);letter-spacing:1px}
+.result-ts{font-family:var(--fm);font-size:0.6rem;color:var(--text-dim);letter-spacing:1px}
 
-.ex-btn {
-  background: var(--bg2); border: none; cursor: pointer;
-  padding: 14px 12px;
-  font-family: var(--font); font-size: 0.72rem; font-weight: 600;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--sub);
-  transition: background 0.2s, color 0.2s;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  position: relative; overflow: hidden;
-}
-.ex-btn::before {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-  height: 2px; background: var(--lime);
-  transform: scaleX(0); transition: transform 0.2s;
-}
-.ex-btn.active { background: var(--bg3); color: var(--lime); }
-.ex-btn.active::before { transform: scaleX(1); }
-.ex-btn:hover:not(.active) { background: var(--bg3); color: var(--text); }
+/* CARDS GRID */
+#cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
 
-.ex-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--muted);
-  transition: background 0.2s, box-shadow 0.2s;
-}
-.ex-btn.active .ex-dot {
-  background: var(--lime);
-  box-shadow: 0 0 8px var(--lime);
-}
+/* CARD */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rl);
+  display:flex;flex-direction:column;overflow:hidden;cursor:pointer;
+  opacity:0;transform:translateY(6px);animation:cin .25s ease forwards;
+  transition:border-color .2s,background .15s,box-shadow .2s;position:relative}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .2s}
+.card:hover{background:var(--bg-hover);border-color:var(--border-b)}
+.card:hover::before{opacity:1}
+.card.buy::before{background:linear-gradient(90deg,transparent,var(--bull),transparent)}
+.card.sell::before{background:linear-gradient(90deg,transparent,var(--bear),transparent)}
+.card.watch::before{background:linear-gradient(90deg,transparent,var(--orange),transparent)}
+.card.overheat::before{background:linear-gradient(90deg,transparent,var(--bear),transparent)}
+.card:hover.buy{border-color:rgba(0,230,118,.3);box-shadow:0 4px 24px rgba(0,230,118,.06)}
+.card:hover.sell{border-color:rgba(255,61,87,.3);box-shadow:0 4px 24px rgba(255,61,87,.06)}
+.card:hover.watch{border-color:rgba(255,152,0,.3);box-shadow:0 4px 24px rgba(255,152,0,.06)}
+@keyframes cin{to{opacity:1;transform:translateY(0)}}
 
-/* ═══════════════════════════════════════════
-   SCAN BUTTON
-═══════════════════════════════════════════ */
-.scan-wrap {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-}
+/* CARD HEADER */
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 10px;gap:10px}
+.card-sym{font-family:var(--fd);font-size:1rem;font-weight:700;letter-spacing:2px;color:var(--text);line-height:1}
+.card-ex-lbl{font-family:var(--fm);font-size:0.52rem;color:var(--text-dim);letter-spacing:1px;margin-top:4px}
+.card-badge{font-family:var(--fm);font-size:0.52rem;font-weight:700;letter-spacing:1.5px;padding:4px 9px;border-radius:2px;flex-shrink:0}
+.badge-buy{background:rgba(0,230,118,.1);color:var(--bull);border:1px solid rgba(0,230,118,.25)}
+.badge-sell{background:rgba(255,61,87,.1);color:var(--bear);border:1px solid rgba(255,61,87,.25)}
+.badge-watch{background:rgba(255,152,0,.1);color:var(--orange);border:1px solid rgba(255,152,0,.25)}
+.badge-mixed{background:rgba(106,133,168,.08);color:var(--text-sec);border:1px solid rgba(106,133,168,.15)}
+.badge-weak{background:rgba(58,79,106,.08);color:var(--text-dim);border:1px solid var(--border)}
+.badge-overheat{background:rgba(255,61,87,.15);color:var(--bear);border:1px solid rgba(255,61,87,.35)}
 
-.scan-btn {
-  width: 100%;
-  background: var(--lime-dim);
-  border: 1px solid var(--lime);
-  color: var(--lime);
-  font-family: var(--font); font-size: 0.78rem; font-weight: 700;
-  letter-spacing: 0.18em; text-transform: uppercase;
-  padding: 16px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
-  position: relative; overflow: hidden;
-}
-.scan-btn::before {
-  content: '';
-  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(200,241,53,0.12), transparent);
-  transition: left 0.5s;
-}
-.scan-btn:hover { background: rgba(200,241,53,0.16); box-shadow: 0 0 24px var(--lime-glow); }
-.scan-btn:hover::before { left: 100%; }
-.scan-btn:active { transform: scale(0.99); }
-.scan-btn.loading {
-  pointer-events: none;
-  color: var(--sub);
-  border-color: var(--border2);
-  background: var(--bg2);
-}
+/* CARD FUNDING RATE */
+.card-rate-row{display:flex;align-items:baseline;gap:10px;padding:0 16px 12px}
+.card-rate{font-family:var(--fd);font-size:1.5rem;font-weight:700;letter-spacing:1px;line-height:1}
+.card-rate.pos{color:var(--bear);text-shadow:0 0 12px rgba(255,61,87,.3)}
+.card-rate.neg{color:var(--bull);text-shadow:0 0 12px rgba(0,230,118,.3)}
+.rate-lbl{font-family:var(--fm);font-size:0.56rem;color:var(--text-dim);letter-spacing:1px}
 
-.scan-icon { font-size: 1rem; }
-.scan-btn.loading .scan-icon { animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* CARD SCORE */
+.card-score-row{display:flex;align-items:center;gap:10px;padding:0 16px 14px}
+.score-num{font-family:var(--fd);font-size:0.65rem;font-weight:700;letter-spacing:1px;min-width:52px}
+.score-num.pos{color:var(--bull)}
+.score-num.neg{color:var(--bear)}
+.score-num.neu{color:var(--text-dim)}
+.score-track{flex:1;height:4px;background:var(--bg-elevated);border-radius:2px;overflow:hidden;border:1px solid var(--border)}
+.score-fill{height:100%;border-radius:2px;transition:width .6s ease .1s}
+.sf-buy{background:linear-gradient(90deg,var(--bull-dim),var(--bull));box-shadow:0 0 6px rgba(0,230,118,.4)}
+.sf-sell{background:linear-gradient(90deg,var(--bear-dim),var(--bear));box-shadow:0 0 6px rgba(255,61,87,.4)}
+.sf-watch{background:linear-gradient(90deg,#cc7000,var(--orange))}
+.sf-mix{background:var(--text-dim)}
 
-/* ═══════════════════════════════════════════
-   PROGRESS
-═══════════════════════════════════════════ */
-#progress-wrap {
-  display: none;
-  padding: 10px 0 6px;
-  border-bottom: 1px solid var(--border);
-}
-.prog-track {
-  height: 2px; background: var(--bg4);
-  position: relative; overflow: hidden;
-}
-.prog-fill {
-  height: 100%; width: 0%;
-  background: var(--lime);
-  box-shadow: 0 0 8px var(--lime);
-  transition: width 0.4s ease;
-}
-.prog-label {
-  font-size: 0.62rem; color: var(--sub); letter-spacing: 0.1em;
-  text-transform: uppercase; margin-top: 5px;
-}
+/* GATE PIPS */
+.card-gates{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;margin:0 16px 16px}
+.gate-pip{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;background:var(--bg-elevated);border-radius:2px}
+.pip-blocks{display:flex;gap:2px}
+.pip-block{width:6px;height:12px;border-radius:1px;background:var(--border-b);transition:background .3s}
+.pip-block.lit-buy{background:var(--bull)}
+.pip-block.lit-sell{background:var(--bear)}
+.pip-block.lit-warn{background:var(--orange)}
+.pip-lbl{font-family:var(--fm);font-size:0.46rem;color:var(--text-dim);letter-spacing:1px;text-align:center}
 
-/* ═══════════════════════════════════════════
-   SUMMARY STRIP
-═══════════════════════════════════════════ */
-#summary-strip {
-  display: none;
-  gap: 1px;
-  padding: 1px 0;
-  background: var(--border);
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-#summary-strip::-webkit-scrollbar { display: none; }
-#summary-strip.visible { display: flex; }
+/* CARD DETAIL */
+.card-detail{display:none;border-top:1px solid var(--border);padding:14px 16px;flex-direction:column;gap:8px;background:var(--bg-base)}
+.card-detail.open{display:flex}
+.detail-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:8px;gap:8px}
+.detail-row:last-of-type{border-bottom:none;padding-bottom:0}
+.detail-gate-name{font-family:var(--fm);font-size:0.58rem;color:var(--text-dim);letter-spacing:1.5px;flex:0 0 100px}
+.detail-mini-pips{display:flex;gap:2px}
+.detail-mini-pips span{width:5px;height:9px;border-radius:1px;background:var(--border-b)}
+.detail-mini-pips span.on-buy{background:var(--bull)}
+.detail-mini-pips span.on-sell{background:var(--bear)}
+.detail-mini-pips span.on-warn{background:var(--orange)}
+.detail-raw{font-family:var(--fm);font-size:0.6rem;color:var(--text-sec);text-align:right;flex:1}
+.detail-pts{font-family:var(--fd);font-size:0.65rem;font-weight:700;min-width:38px;text-align:right;letter-spacing:.5px}
+.detail-pts.pos{color:var(--bull)}
+.detail-pts.neg{color:var(--bear)}
+.detail-pts.neu{color:var(--text-dim)}
+.detail-warning{font-family:var(--fm);font-size:0.58rem;color:var(--orange);background:var(--orange-glow);
+  border:1px solid rgba(255,152,0,.3);padding:8px 12px;border-radius:2px;letter-spacing:.5px;line-height:1.5}
+.detail-thesis{font-family:var(--fm);font-size:0.62rem;color:var(--text-sec);line-height:1.7;
+  padding:10px 0 0;border-top:1px solid var(--border);letter-spacing:.3px}
 
-.sum-pill {
-  flex: 0 0 auto;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 12px 20px;
-  background: var(--bg2);
-  min-width: 90px;
-  gap: 3px;
-}
-.sum-pill:first-child { flex: 1 0 auto; }
+/* IDLE STATE */
+#idle-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;gap:14px;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rl)}
+.idle-icon{font-size:2.2rem;opacity:.1;animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.idle-title{font-family:var(--fd);font-size:0.72rem;letter-spacing:4px;color:var(--text-dim)}
+.idle-sub{font-family:var(--fm);font-size:0.58rem;color:var(--text-dim);letter-spacing:1px;opacity:.5}
 
-.sum-val {
-  font-size: 1.5rem; font-weight: 700; line-height: 1;
-  color: var(--text);
-}
-.sum-val.lime { color: var(--lime); }
-.sum-val.red { color: var(--red); }
-.sum-val.amber { color: var(--amber); }
-.sum-val.sub { color: var(--sub); }
+/* LOADING STATE */
+.load-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rl)}
+.load-ring{width:32px;height:32px;border:2px solid var(--border-b);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite}
+.load-txt{font-family:var(--fm);font-size:0.65rem;color:var(--text-dim);letter-spacing:2px}
 
-.sum-label {
-  font-size: 0.58rem; color: var(--sub); letter-spacing: 0.12em;
-  text-transform: uppercase; font-weight: 500;
-}
+/* FOOTER */
+.footer{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;
+  border-top:1px solid var(--border);margin-top:40px;font-family:var(--fm);font-size:0.58rem;color:var(--text-dim);letter-spacing:1px}
 
-/* ═══════════════════════════════════════════
-   FILTER TABS
-═══════════════════════════════════════════ */
-#filter-bar {
-  display: none;
-  gap: 1px;
-  padding: 10px 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-#filter-bar::-webkit-scrollbar { display: none; }
-#filter-bar.visible { display: flex; }
-
-.f-tab {
-  flex: 0 0 auto;
-  background: var(--bg2); border: 1px solid var(--border);
-  color: var(--sub); cursor: pointer;
-  font-family: var(--font); font-size: 0.64rem; font-weight: 600;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  padding: 8px 14px;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.f-tab:hover { background: var(--bg3); color: var(--text); border-color: var(--border2); }
-.f-tab.active-all  { background: var(--bg3); color: var(--text); border-color: var(--border2); }
-.f-tab.active-buy  { background: var(--lime-dim); color: var(--lime); border-color: var(--lime); }
-.f-tab.active-sell { background: var(--red-dim);  color: var(--red);  border-color: var(--red); }
-.f-tab.active-watch{ background: var(--amber-dim);color: var(--amber);border-color: var(--amber); }
-.f-tab.active-mix  { background: var(--bg3); color: var(--sub); border-color: var(--border2); }
-
-/* meta row */
-#result-meta {
-  display: none;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0 10px;
-  border-bottom: 1px solid var(--border);
-}
-#result-meta.visible { display: flex; }
-.meta-count { font-size: 0.65rem; color: var(--sub); letter-spacing: 0.1em; }
-.meta-ts    { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.08em; }
-
-/* ═══════════════════════════════════════════
-   CARDS GRID
-═══════════════════════════════════════════ */
-#cards-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1px;
-  background: var(--border);
-  margin-top: 1px;
-}
-@media (min-width: 600px) {
-  #cards-grid { grid-template-columns: 1fr 1fr; }
-}
-@media (min-width: 960px) {
-  #cards-grid { grid-template-columns: 1fr 1fr 1fr; }
-}
-
-/* ═══════════════════════════════════════════
-   CARD
-═══════════════════════════════════════════ */
-.card {
-  background: var(--bg2);
-  display: flex; flex-direction: column;
-  opacity: 0; transform: translateY(10px);
-  animation: card-in 0.3s ease forwards;
-  transition: background 0.15s;
-  cursor: pointer;
-}
-.card:hover { background: var(--bg3); }
-
-@keyframes card-in {
-  to { opacity:1; transform:translateY(0); }
-}
-
-/* card top row */
-.card-top {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  padding: 14px 14px 10px;
-  gap: 8px;
-}
-
-.card-sym {
-  font-size: 1.05rem; font-weight: 700; letter-spacing: 0.04em;
-  color: var(--text); line-height: 1;
-}
-.card-ex {
-  font-size: 0.58rem; color: var(--muted); letter-spacing: 0.1em;
-  text-transform: uppercase; margin-top: 3px;
-}
-
-.card-badge {
-  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em;
-  text-transform: uppercase; padding: 4px 8px;
-  flex-shrink: 0;
-}
-.badge-buy   { background: var(--lime-dim); color: var(--lime); border: 1px solid rgba(200,241,53,0.3); }
-.badge-sell  { background: var(--red-dim);  color: var(--red);  border: 1px solid rgba(255,76,46,0.3); }
-.badge-watch { background: var(--amber-dim);color: var(--amber);border: 1px solid rgba(245,166,35,0.3); }
-.badge-mixed { background: var(--bg3); color: var(--sub); border: 1px solid var(--border); }
-.badge-weak  { background: var(--bg3); color: var(--muted); border: 1px solid var(--border); }
-.badge-overheat { background: rgba(255,76,46,0.18); color: var(--red); border: 1px solid var(--red); }
-
-/* card funding row */
-.card-funding {
-  display: flex; align-items: baseline; gap: 8px;
-  padding: 0 14px 10px;
-}
-.card-rate {
-  font-size: 1.5rem; font-weight: 700; line-height: 1;
-}
-.card-rate.pos { color: var(--red); }   /* positive funding = short opportunity = red */
-.card-rate.neg { color: var(--lime); }  /* negative funding = long opportunity = lime */
-
-.card-rate-label {
-  font-size: 0.6rem; color: var(--sub); letter-spacing: 0.1em;
-  text-transform: uppercase; font-weight: 400;
-}
-
-/* score total */
-.card-score-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 0 14px 12px;
-}
-.card-score-num {
-  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em;
-  min-width: 48px;
-}
-.card-score-num.pos { color: var(--lime); }
-.card-score-num.neg { color: var(--red); }
-.card-score-num.neu { color: var(--sub); }
-
-.score-track {
-  flex: 1; height: 3px; background: var(--bg4);
-  position: relative;
-}
-.score-fill {
-  height: 100%; max-width: 100%;
-  transition: width 0.6s ease 0.2s;
-}
-.score-fill.buy  { background: var(--lime); box-shadow: 0 0 6px var(--lime); }
-.score-fill.sell { background: var(--red);  box-shadow: 0 0 6px var(--red); }
-.score-fill.watch{ background: var(--amber);}
-.score-fill.mix  { background: var(--sub); }
-
-/* ═══════════════════════════════════════════
-   GATE PIPS STRIP
-═══════════════════════════════════════════ */
-.card-gates {
-  display: grid; grid-template-columns: repeat(5, 1fr);
-  gap: 1px; margin: 0 14px 14px;
-}
-
-.gate-pip {
-  display: flex; flex-direction: column;
-  align-items: center; gap: 3px;
-  padding: 6px 4px;
-  background: var(--bg4);
-  transition: background 0.15s;
-  position: relative;
-}
-
-.pip-blocks {
-  display: flex; gap: 2px;
-}
-.pip-block {
-  width: 5px; height: 10px;
-  background: var(--muted);
-  transition: background 0.3s, box-shadow 0.3s;
-}
-.pip-block.lit-buy  { background: var(--lime); }
-.pip-block.lit-sell { background: var(--red); }
-.pip-block.lit-warn { background: var(--amber); }
-
-.pip-label {
-  font-size: 0.48rem; color: var(--muted); letter-spacing: 0.08em;
-  text-transform: uppercase; text-align: center;
-  font-weight: 600;
-}
-.pip-val {
-  font-size: 0.54rem; color: var(--sub); text-align: center;
-}
-
-/* ═══════════════════════════════════════════
-   CARD EXPANDED DETAIL
-═══════════════════════════════════════════ */
-.card-detail {
-  display: none;
-  border-top: 1px solid var(--border);
-  padding: 12px 14px 14px;
-  flex-direction: column; gap: 8px;
-  background: var(--bg);
-}
-.card-detail.open { display: flex; }
-
-.detail-row {
-  display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 7px;
-}
-.detail-row:last-child { border-bottom: none; padding-bottom: 0; }
-
-.detail-gate-name {
-  font-size: 0.62rem; color: var(--sub); letter-spacing: 0.1em;
-  text-transform: uppercase; font-weight: 600;
-}
-.detail-gate-raw {
-  font-size: 0.62rem; color: var(--text); text-align: right;
-}
-.detail-gate-score {
-  font-size: 0.65rem; font-weight: 700;
-  min-width: 36px; text-align: right;
-}
-.detail-gate-score.pos { color: var(--lime); }
-.detail-gate-score.neg { color: var(--red); }
-.detail-gate-score.neu { color: var(--muted); }
-
-.detail-mid { flex: 1; padding: 0 8px; }
-.detail-pip-mini { display: flex; gap: 2px; justify-content: center; }
-.detail-pip-mini span {
-  width: 4px; height: 8px; background: var(--muted);
-}
-.detail-pip-mini span.on-buy  { background: var(--lime); }
-.detail-pip-mini span.on-sell { background: var(--red); }
-
-.detail-thesis {
-  font-size: 0.65rem; color: var(--sub); line-height: 1.6;
-  padding-top: 8px; border-top: 1px solid var(--border);
-  font-weight: 400;
-}
-
-/* warning badge in detail */
-.detail-warning {
-  font-size: 0.62rem; color: var(--amber);
-  background: var(--amber-dim); border: 1px solid rgba(245,166,35,0.3);
-  padding: 6px 10px; font-weight: 600; letter-spacing: 0.06em;
-}
-
-/* ═══════════════════════════════════════════
-   IDLE / EMPTY STATES
-═══════════════════════════════════════════ */
-#idle-state {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 60px 20px; gap: 12px; text-align: center;
-}
-.idle-glyph {
-  font-size: 2.5rem; opacity: 0.15;
-  animation: idle-float 4s ease-in-out infinite;
-}
-@keyframes idle-float {
-  0%,100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-.idle-title { font-size: 0.72rem; color: var(--sub); letter-spacing: 0.16em; text-transform: uppercase; }
-.idle-sub   { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; }
-
-/* ═══════════════════════════════════════════
-   SEARCH
-═══════════════════════════════════════════ */
-.search-wrap {
-  display: none;
-  padding: 10px 0 0;
-}
-.search-wrap.visible { display: block; }
-.search-input {
-  width: 100%;
-  background: var(--bg2); border: 1px solid var(--border);
-  color: var(--text); font-family: var(--font); font-size: 0.72rem;
-  padding: 10px 12px; letter-spacing: 0.06em;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.search-input::placeholder { color: var(--muted); }
-.search-input:focus { border-color: var(--border2); }
-
-/* ═══════════════════════════════════════════
-   MOBILE OVERRIDES
-═══════════════════════════════════════════ */
-@media (max-width: 480px) {
-  .card-sym { font-size: 0.95rem; }
-  .card-rate { font-size: 1.3rem; }
-  .sum-val { font-size: 1.3rem; }
-  nav { padding: 12px 0; }
+/* MOBILE */
+@media(max-width:600px){
+  #app{padding:12px 12px 60px}
+  .header{padding:0 12px;height:50px}
+  .logo-sub{display:none}
+  .logo{font-size:.9rem;letter-spacing:3px}
+  .hdr-time{font-size:.75rem;min-width:60px}
+  .ex-panel{flex-wrap:wrap;gap:10px;padding:12px 14px}
+  .ex-selector{flex:1}
+  .ex-btn{flex:1;padding:10px 8px;font-size:.55rem;letter-spacing:1px}
+  .scan-btn{width:100%;justify-content:center;padding:10px;font-size:.6rem}
+  .filter-bar{gap:6px}
+  .f-btn{padding:6px 10px;font-size:.62rem}
+  .search-wrap{width:100%;margin-left:0}
+  .search-input{width:100%}
+  .stats-row{grid-template-columns:1fr 1fr;gap:8px}
+  .stat-val{font-size:1.3rem}
+  #cards-grid{grid-template-columns:1fr}
+  .footer{flex-direction:column;gap:6px;text-align:center}
 }
 </style>
 </head>
 <body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<!-- HEADER -->
+<header class="header">
+  <div style="display:flex;align-items:center">
+    <div class="logo"><b>[</b>ATL<b>]</b></div>
+    <div class="logo-sub">APEX · SIGNAL INTELLIGENCE</div>
+  </div>
+  <div class="hdr-right">
+    <div class="status-wrap">
+      <span class="status-dot" id="status-dot"></span>
+      <span class="status-txt" id="status-txt">SELECT EXCHANGE</span>
+    </div>
+    <div class="hdr-time" id="hdr-time">--:--:--</div>
+  </div>
+</header>
+
 <div id="app">
 
-  <!-- NAV -->
-  <nav>
-    <div class="nav-logo">ATL <span>·</span> APEX</div>
-    <div class="nav-right">
-      <div class="nav-pulse"></div>
-      <div class="nav-clock" id="nav-clock">--:--:--</div>
+  <!-- EXCHANGE PANEL -->
+  <div class="ex-panel">
+    <span class="panel-label">EXCHANGE:</span>
+    <div class="ex-selector">
+      <button class="ex-btn bybit-btn sel" id="ex-bybit" onclick="setEx('bybit')">
+        <span class="ex-dot"></span>BYBIT LINEAR
+      </button>
+      <button class="ex-btn binance-btn" id="ex-binance" onclick="setEx('binance')">
+        <span class="ex-dot"></span>BINANCE FUTURES
+      </button>
     </div>
-  </nav>
-
-  <!-- EXCHANGE SELECT -->
-  <div class="ctrl-bar">
-    <button class="ex-btn active" id="ex-bybit" onclick="setEx('bybit')">
-      <span class="ex-dot"></span> Bybit Linear
-    </button>
-    <button class="ex-btn" id="ex-binance" onclick="setEx('binance')">
-      <span class="ex-dot"></span> Binance Futures
-    </button>
-  </div>
-
-  <!-- SCAN -->
-  <div class="scan-wrap">
-    <button class="scan-btn" id="scan-btn" onclick="runScan()">
-      <span class="scan-icon">⟳</span>
+    <div class="panel-sep"></div>
+    <button class="scan-btn en bybit-scan" id="scan-btn" onclick="runScan()">
+      <span class="scan-icon" id="scan-icon">⟳</span>
       <span id="scan-label">INITIATE SCAN</span>
     </button>
   </div>
 
   <!-- PROGRESS -->
-  <div id="progress-wrap">
+  <div class="prog-wrap" id="prog-wrap">
     <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
     <div class="prog-label" id="prog-label">INITIALISING...</div>
   </div>
 
-  <!-- SUMMARY STRIP -->
-  <div id="summary-strip">
-    <div class="sum-pill">
-      <div class="sum-val sub" id="s-total">0</div>
-      <div class="sum-label">Scanned</div>
-    </div>
-    <div class="sum-pill">
-      <div class="sum-val" id="s-gated">0</div>
-      <div class="sum-label">Gated</div>
-    </div>
-    <div class="sum-pill">
-      <div class="sum-val lime" id="s-buy">0</div>
-      <div class="sum-label">Strong Buy</div>
-    </div>
-    <div class="sum-pill">
-      <div class="sum-val red" id="s-sell">0</div>
-      <div class="sum-label">Strong Sell</div>
-    </div>
-    <div class="sum-pill">
-      <div class="sum-val amber" id="s-watch">0</div>
-      <div class="sum-label">Watch</div>
-    </div>
-    <div class="sum-pill">
-      <div class="sum-val sub" id="s-mixed">0</div>
-      <div class="sum-label">Mixed</div>
-    </div>
+  <!-- STATS -->
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card sc"><div class="stat-label">TOTAL SCANNED</div><div class="stat-val ac" id="s-total">—</div></div>
+    <div class="stat-card sg"><div class="stat-label">FUNDING GATED</div><div class="stat-val gc" id="s-gated">—</div></div>
+    <div class="stat-card sl"><div class="stat-label">STRONG BUY</div><div class="stat-val bc" id="s-buy">—</div></div>
+    <div class="stat-card ss"><div class="stat-label">STRONG SELL</div><div class="stat-val rc" id="s-sell">—</div></div>
+    <div class="stat-card sw"><div class="stat-label">WATCH</div><div class="stat-val oc" id="s-watch">—</div></div>
+    <div class="stat-card sc"><div class="stat-label">MIXED</div><div class="stat-val tc" id="s-mixed">—</div></div>
   </div>
 
-  <!-- SEARCH -->
-  <div class="search-wrap" id="search-wrap">
-    <input class="search-input" id="search-input" placeholder="SEARCH// BTC..." oninput="renderCards()"/>
-  </div>
-
-  <!-- FILTER TABS -->
-  <div id="filter-bar">
-    <button class="f-tab active-all" data-f="all"      onclick="setFilter('all')">ALL</button>
-    <button class="f-tab"           data-f="buy"       onclick="setFilter('buy')">STRONG BUY</button>
-    <button class="f-tab"           data-f="sell"      onclick="setFilter('sell')">STRONG SELL</button>
-    <button class="f-tab"           data-f="watch"     onclick="setFilter('watch')">WATCH</button>
-    <button class="f-tab"           data-f="mixed"     onclick="setFilter('mixed')">MIXED</button>
-    <button class="f-tab"           data-f="weak"      onclick="setFilter('weak')">WEAK SIGNAL</button>
-    <button class="f-tab"           data-f="overheat"  onclick="setFilter('overheat')">OVERHEATED</button>
+  <!-- FILTER BAR -->
+  <div class="filter-bar" id="filter-bar">
+    <div class="filter-group">
+      <button class="f-btn fa" data-f="all"      onclick="setFilter('all')">ALL</button>
+      <button class="f-btn"   data-f="buy"       onclick="setFilter('buy')">STRONG BUY</button>
+      <button class="f-btn"   data-f="sell"      onclick="setFilter('sell')">STRONG SELL</button>
+      <button class="f-btn"   data-f="watch"     onclick="setFilter('watch')">WATCH</button>
+      <button class="f-btn"   data-f="mixed"     onclick="setFilter('mixed')">MIXED</button>
+      <button class="f-btn"   data-f="weak"      onclick="setFilter('weak')">WEAK</button>
+      <button class="f-btn"   data-f="overheat"  onclick="setFilter('overheat')">OVERHEATED</button>
+    </div>
+    <div class="search-wrap">
+      <span class="search-pfx">SEARCH://</span>
+      <input class="search-input" id="search-input" placeholder="BTC..." oninput="renderCards()"/>
+    </div>
   </div>
 
   <!-- RESULT META -->
-  <div id="result-meta">
-    <div class="meta-count" id="meta-count">— assets</div>
-    <div class="meta-ts"    id="meta-ts">—</div>
+  <div class="result-meta" id="result-meta">
+    <span class="result-count" id="result-count">— assets</span>
+    <span class="result-ts" id="result-ts">—</span>
   </div>
 
   <!-- CARDS -->
   <div id="cards-grid">
     <div id="idle-state">
-      <div class="idle-glyph">◎</div>
-      <div class="idle-title">Signal Intelligence Ready</div>
+      <div class="idle-icon">◎</div>
+      <div class="idle-title">SIGNAL ENGINE READY</div>
       <div class="idle-sub">Select exchange · Initiate scan</div>
     </div>
   </div>
 
-</div><!-- /app -->
+</div>
+
+<footer class="footer">
+  <span>ATL — ALPHA TRADERS LABS</span>
+  <span id="footer-ex">BYBIT LINEAR · BINANCE FUTURES PERPETUALS</span>
+  <span>NOT FINANCIAL ADVICE</span>
+</footer>
 
 <script>
-/* ═══════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════ */
-let currentEx = 'bybit';
-let scanData   = [];
-let currentFilter = 'all';
-let lastScanTs = null;
+'use strict';
 
-const FUNDING_GATE = 0.03; // |rate| must exceed this to pass Gate 1
+/* ═══════════════════════════════════
+   STATE
+═══════════════════════════════════ */
+let currentEx    = 'bybit';
+let scanData     = [];
+let currentFilter = 'all';
+let lastScanTs   = null;
+const FUNDING_GATE = 0.03;
 const BATCH_SIZE   = 8;
 
-/* ═══════════════════════════════════════════
-   CLOCK
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════════
+   CLOCK + STATUS
+═══════════════════════════════════ */
 function tickClock() {
-  const now = new Date();
-  document.getElementById('nav-clock').textContent =
-    now.toTimeString().slice(0,8);
+  document.getElementById('hdr-time').textContent = new Date().toLocaleTimeString('en-US',{hour12:false});
 }
-tickClock();
-setInterval(tickClock, 1000);
+tickClock(); setInterval(tickClock, 1000);
 
-/* ═══════════════════════════════════════════
+function setStatus(type, txt) {
+  document.getElementById('status-dot').className = 'status-dot ' + type;
+  document.getElementById('status-txt').textContent = txt;
+}
+
+/* ═══════════════════════════════════
    EXCHANGE SELECT
-═══════════════════════════════════════════ */
+═══════════════════════════════════ */
 function setEx(ex) {
   currentEx = ex;
-  document.getElementById('ex-bybit').classList.toggle('active', ex === 'bybit');
-  document.getElementById('ex-binance').classList.toggle('active', ex === 'binance');
+  document.getElementById('ex-bybit').classList.toggle('sel', ex === 'bybit');
+  document.getElementById('ex-binance').classList.toggle('sel', ex === 'binance');
+  const btn = document.getElementById('scan-btn');
+  btn.className = 'scan-btn en ' + (ex === 'bybit' ? 'bybit-scan' : 'binance-scan');
+  setStatus('ready', ex.toUpperCase() + ' — READY TO SCAN');
 }
 
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════
    FILTER
-═══════════════════════════════════════════ */
+═══════════════════════════════════ */
 function setFilter(f) {
   currentFilter = f;
-  document.querySelectorAll('.f-tab').forEach(btn => {
+  document.querySelectorAll('.f-btn').forEach(btn => {
     const fv = btn.getAttribute('data-f');
-    btn.className = 'f-tab';
+    btn.className = 'f-btn';
     if (fv === f) {
-      const map = { all:'active-all', buy:'active-buy', sell:'active-sell',
-                    watch:'active-watch', mixed:'active-mix', weak:'active-mix', overheat:'active-sell' };
-      btn.classList.add(map[f] || 'active-all');
+      const m = {all:'fa',buy:'fb',sell:'fs',watch:'fw',mixed:'fm',weak:'fm',overheat:'fs'};
+      btn.classList.add(m[f] || 'fa');
     }
   });
   renderCards();
 }
 
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════
    SAFE FETCH
-═══════════════════════════════════════════ */
-async function safeFetch(url, jsonParse = true) {
-  try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
-    if (!r.ok) return null;
-    return jsonParse ? await r.json() : await r.text();
-  } catch { return null; }
+═══════════════════════════════════ */
+async function safeFetch(url, direct = false) {
+  if (direct) {
+    try {
+      const r = await fetch(url, {signal: AbortSignal.timeout(10000)});
+      if (!r.ok) return null;
+      return await r.json();
+    } catch { return null; }
+  }
+  const PROXIES = ['https://corsproxy.io/?','https://api.codetabs.com/v1/proxy?quest='];
+  for (const p of PROXIES) {
+    try {
+      const r = await fetch(p + encodeURIComponent(url), {signal: AbortSignal.timeout(10000)});
+      if (!r.ok) continue;
+      const txt = await r.text();
+      try {
+        const j = JSON.parse(txt);
+        return j.contents && typeof j.contents === 'string' ? JSON.parse(j.contents) : j;
+      } catch { continue; }
+    } catch { continue; }
+  }
+  return null;
 }
 
-/* ═══════════════════════════════════════════
-   API — BULK FETCH
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════════
+   BULK FETCH
+═══════════════════════════════════ */
 async function fetchBybitBulk() {
-  const res = await safeFetch('https://api.bybit.com/v5/market/tickers?category=linear');
+  const res = await safeFetch('https://api.bybit.com/v5/market/tickers?category=linear', true);
   if (!res?.result?.list) return [];
   return res.result.list
     .filter(t => t.symbol.endsWith('USDT') && t.fundingRate !== undefined && t.fundingRate !== '')
@@ -734,11 +495,9 @@ async function fetchBinanceBulk() {
     safeFetch('https://fapi.binance.com/fapi/v1/ticker/24hr'),
   ]);
   if (!funding || !Array.isArray(funding)) return [];
-  const tickerMap = {};
+  const tm = {};
   if (ticker && Array.isArray(ticker)) {
-    for (const t of ticker) {
-      tickerMap[t.symbol] = { vol24h: parseFloat(t.quoteVolume)||0, price24hPct: parseFloat(t.priceChangePercent)||0 };
-    }
+    for (const t of ticker) tm[t.symbol] = {vol24h:parseFloat(t.quoteVolume)||0, price24hPct:parseFloat(t.priceChangePercent)||0};
   }
   return funding
     .filter(t => t.symbol.endsWith('USDT') && t.lastFundingRate !== undefined)
@@ -748,101 +507,84 @@ async function fetchBinanceBulk() {
       exchange:    'Binance',
       funding:     parseFloat(t.lastFundingRate)*100,
       price:       parseFloat(t.markPrice)||parseFloat(t.indexPrice)||0,
-      price24hPct: tickerMap[t.symbol]?.price24hPct||0,
+      price24hPct: tm[t.symbol]?.price24hPct||0,
       oi:          0,
-      vol24h:      tickerMap[t.symbol]?.vol24h||0,
+      vol24h:      tm[t.symbol]?.vol24h||0,
       markPrice:   parseFloat(t.markPrice)||0,
       indexPrice:  parseFloat(t.indexPrice)||0,
       nextFunding: parseInt(t.nextFundingTime)||0,
     }));
 }
 
-/* ═══════════════════════════════════════════
-   API — PER-SYMBOL ENRICHMENT
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════════
+   PER-SYMBOL ENRICHMENT
+═══════════════════════════════════ */
 async function fetchBybitLS(symbol) {
-  const res = await safeFetch(`https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=${symbol}&period=1h&limit=1`);
+  const res = await safeFetch(`https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=${symbol}&period=1h&limit=1`, true);
   const item = res?.result?.list?.[0];
   if (!item) return null;
-  return { buyRatio: parseFloat(item.buyRatio)||0.5, sellRatio: parseFloat(item.sellRatio)||0.5 };
+  return {buyRatio:parseFloat(item.buyRatio)||0.5, sellRatio:parseFloat(item.sellRatio)||0.5};
 }
 
 async function fetchBinanceLS(symbol) {
   const res = await safeFetch(`https://fapi.binance.com/futures/data/topLongShortAccountRatio?symbol=${symbol}&period=1h&limit=1`);
   const item = Array.isArray(res) ? res[0] : null;
   if (!item) return null;
-  return { buyRatio: parseFloat(item.longAccount)||0.5, sellRatio: parseFloat(item.shortAccount)||0.5 };
+  return {buyRatio:parseFloat(item.longAccount)||0.5, sellRatio:parseFloat(item.shortAccount)||0.5};
 }
 
 async function fetchBinanceTaker(symbol) {
   const res = await safeFetch(`https://fapi.binance.com/futures/data/takerlongshortRatio?symbol=${symbol}&period=1h&limit=1`);
   const item = Array.isArray(res) ? res[0] : null;
   if (!item) return null;
-  return { buySellRatio: parseFloat(item.buySellRatio)||1, buyVol: parseFloat(item.buyVol)||0, sellVol: parseFloat(item.sellVol)||0 };
+  return {buySellRatio:parseFloat(item.buySellRatio)||1, buyVol:parseFloat(item.buyVol)||0, sellVol:parseFloat(item.sellVol)||0};
 }
 
-/* ═══════════════════════════════════════════
-   PROGRESS HELPERS
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════════
+   PROGRESS
+═══════════════════════════════════ */
 function setProgress(pct, label) {
-  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-fill').style.width = pct + '%';
   document.getElementById('prog-label').textContent = label;
 }
 
-/* ═══════════════════════════════════════════
-   PHASE 2 SCORING ENGINE — 5 Gates × 5pts = 25
-   Direction logic (corrected):
-     Negative funding → LONG opportunity → positive score
-     Positive funding → SHORT opportunity → negative score
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════════
+   SCORING ENGINE (unchanged logic)
+═══════════════════════════════════ */
 function scoreAsset(a) {
   let totalScore = 0;
   const gates = [];
   const isPos = a.funding > 0;
   const absF  = Math.abs(a.funding);
 
-  /* ── GATE 1: Funding Rate magnitude (1–5, direction sets overall sign) ── */
   let g1 = 0;
   if      (absF > 0.20) g1 = 5;
   else if (absF > 0.12) g1 = 4;
   else if (absF > 0.08) g1 = 3;
   else if (absF > 0.05) g1 = 2;
   else if (absF > 0.03) g1 = 1;
-  // positive funding = short opp → score negative; negative funding = long opp → positive
-  const g1Signed = isPos ? -g1 : g1;
-  totalScore += g1Signed;
-  gates.push({
-    label: 'RATE', raw: (a.funding>=0?'+':'')+a.funding.toFixed(4)+'%',
-    pts: g1Signed, rawPts: g1, max: 5
-  });
+  const g1s = isPos ? -g1 : g1;
+  totalScore += g1s;
+  gates.push({label:'RATE', raw:(a.funding>=0?'+':'')+a.funding.toFixed(4)+'%', pts:g1s, rawPts:g1, max:5});
 
-  /* ── GATE 2: L/S Ratio — who's overextended (0–5) ── */
   let g2 = 0;
   const ls = a.lsRatio;
   if (ls) {
-    const dominance = Math.abs(ls.buyRatio - ls.sellRatio);
-    if      (dominance > 0.25) g2 = 5;
-    else if (dominance > 0.15) g2 = 4;
-    else if (dominance > 0.08) g2 = 3;
-    else if (dominance > 0.05) g2 = 2;
-    else if (dominance > 0.02) g2 = 1;
-
-    // Positive funding: longs dominant = crowded long = confirms SHORT opp → negative
-    // Negative funding: shorts dominant = crowded short = confirms LONG opp → positive
+    const dom = Math.abs(ls.buyRatio - ls.sellRatio);
+    if      (dom > 0.25) g2 = 5;
+    else if (dom > 0.15) g2 = 4;
+    else if (dom > 0.08) g2 = 3;
+    else if (dom > 0.05) g2 = 2;
+    else if (dom > 0.02) g2 = 1;
     const longsLeading = ls.buyRatio > ls.sellRatio;
-    // Confluence: funding direction aligns with dominant side → confirms signal
     const aligned = (isPos && longsLeading) || (!isPos && !longsLeading);
-    const g2Signed = aligned ? (isPos ? -g2 : g2) : (isPos ? g2*0.3 : -g2*0.3);
-    totalScore += Math.round(g2Signed);
-    gates.push({
-      label: 'L/S', raw: (ls.buyRatio*100).toFixed(0)+'% L / '+(ls.sellRatio*100).toFixed(0)+'% S',
-      pts: Math.round(g2Signed), rawPts: g2, max: 5
-    });
+    const g2s = aligned ? (isPos ? -g2 : g2) : Math.round(isPos ? g2*0.3 : -g2*0.3);
+    totalScore += g2s;
+    gates.push({label:'L/S', raw:(ls.buyRatio*100).toFixed(0)+'% L / '+(ls.sellRatio*100).toFixed(0)+'% S', pts:g2s, rawPts:g2, max:5});
   } else {
-    gates.push({ label: 'L/S', raw: 'N/A', pts: 0, rawPts: 0, max: 5 });
+    gates.push({label:'L/S', raw:'N/A', pts:0, rawPts:0, max:5});
   }
 
-  /* ── GATE 3: OI Context — V/OI conviction ratio (0–5) ── */
   let g3 = 0;
   if (a.oi > 0 && a.vol24h > 0) {
     const voi = a.vol24h / a.oi;
@@ -851,15 +593,13 @@ function scoreAsset(a) {
     else if (voi > 1)   g3 = 3;
     else if (voi > 0.5) g3 = 2;
     else if (voi > 0.3) g3 = 1;
-    const g3Signed = isPos ? -g3 : g3;
-    totalScore += g3Signed;
-    const voiStr = a.vol24h > 0 && a.oi > 0 ? 'V/OI: '+(a.vol24h/a.oi).toFixed(2)+'x' : 'N/A';
-    gates.push({ label: 'OI', raw: voiStr, pts: g3Signed, rawPts: g3, max: 5 });
+    const g3s = isPos ? -g3 : g3;
+    totalScore += g3s;
+    gates.push({label:'OI', raw:'V/OI: '+(a.vol24h/a.oi).toFixed(2)+'x', pts:g3s, rawPts:g3, max:5});
   } else {
-    gates.push({ label: 'OI', raw: 'N/A', pts: 0, rawPts: 0, max: 5 });
+    gates.push({label:'OI', raw:'N/A', pts:0, rawPts:0, max:5});
   }
 
-  /* ── GATE 4: Price 24h — trend alignment (0–5) ── */
   let g4 = 0;
   const p24 = a.price24hPct;
   const pAbs = Math.abs(p24);
@@ -868,65 +608,47 @@ function scoreAsset(a) {
   else if (pAbs > 2)  g4 = 3;
   else if (pAbs > 1)  g4 = 2;
   else if (pAbs > 0.5) g4 = 1;
-
-  // Positive funding + price up = overbought longs = confirms SHORT
-  // Negative funding + price down = oversold shorts = confirms LONG
   const priceAligned = (isPos && p24 > 0) || (!isPos && p24 < 0);
-  const g4Signed = priceAligned ? (isPos ? -g4 : g4) : (isPos ? g4*0.4 : -g4*0.4);
-  totalScore += Math.round(g4Signed);
-  gates.push({
-    label: 'P24H', raw: (p24>=0?'+':'')+p24.toFixed(2)+'%',
-    pts: Math.round(g4Signed), rawPts: g4, max: 5
-  });
+  const g4s = priceAligned ? (isPos ? -g4 : g4) : Math.round(isPos ? g4*0.4 : -g4*0.4);
+  totalScore += g4s;
+  gates.push({label:'P24H', raw:(p24>=0?'+':'')+p24.toFixed(2)+'%', pts:g4s, rawPts:g4, max:5});
 
-  /* ── GATE 5: Taker Flow (Binance) OR Basis (Bybit) ── */
   let g5 = 0, g5Raw = '—';
   if (a.exchange === 'Binance' && a.takerFlow) {
     const bsr = a.takerFlow.buySellRatio;
     g5Raw = 'B/S '+bsr.toFixed(3);
     const bsrDev = Math.abs(bsr - 1);
-    if      (bsrDev > 0.4) g5 = 5;
+    if      (bsrDev > 0.4)  g5 = 5;
     else if (bsrDev > 0.25) g5 = 4;
     else if (bsrDev > 0.15) g5 = 3;
     else if (bsrDev > 0.08) g5 = 2;
     else if (bsrDev > 0.03) g5 = 1;
-    // Aggressive buying + positive funding = more longs = SHORT confirmation → negative
-    // Aggressive selling + negative funding = more shorts = LONG confirmation → positive
-    const buyAggressive = bsr > 1;
-    const flowAligned = (isPos && buyAggressive) || (!isPos && !buyAggressive);
-    const g5Signed = flowAligned ? (isPos ? -g5 : g5) : (isPos ? g5*0.3 : -g5*0.3);
-    totalScore += Math.round(g5Signed);
-    gates.push({ label: 'FLOW', raw: g5Raw, pts: Math.round(g5Signed), rawPts: g5, max: 5 });
+    const buyAgg = bsr > 1;
+    const flowAligned = (isPos && buyAgg) || (!isPos && !buyAgg);
+    const g5s = flowAligned ? (isPos ? -g5 : g5) : Math.round(isPos ? g5*0.3 : -g5*0.3);
+    totalScore += g5s;
+    gates.push({label:'FLOW', raw:g5Raw, pts:g5s, rawPts:g5, max:5});
   } else if (a.exchange === 'Bybit' && a.markPrice && a.indexPrice && a.indexPrice > 0) {
-    const basis = ((a.markPrice - a.indexPrice) / a.indexPrice) * 100;
+    const basis = ((a.markPrice - a.indexPrice) / a.indexPrice)*100;
     g5Raw = 'BASIS '+(basis>=0?'+':'')+basis.toFixed(4)+'%';
     const bAbs = Math.abs(basis);
-    if      (bAbs > 0.08) g5 = 5;
-    else if (bAbs > 0.05) g5 = 4;
-    else if (bAbs > 0.03) g5 = 3;
+    if      (bAbs > 0.08)  g5 = 5;
+    else if (bAbs > 0.05)  g5 = 4;
+    else if (bAbs > 0.03)  g5 = 3;
     else if (bAbs > 0.015) g5 = 2;
     else if (bAbs > 0.005) g5 = 1;
-    // Positive basis (futures > spot) + positive funding = confirms long crowding = SHORT signal
-    // Negative basis (futures < spot) + negative funding = confirms short crowding = LONG signal
     const basisAligned = (isPos && basis > 0) || (!isPos && basis < 0);
-    const g5Signed = basisAligned ? (isPos ? -g5 : g5) : (isPos ? g5*0.4 : -g5*0.4);
-    totalScore += Math.round(g5Signed);
-    gates.push({ label: 'BASIS', raw: g5Raw, pts: Math.round(g5Signed), rawPts: g5, max: 5 });
+    const g5s = basisAligned ? (isPos ? -g5 : g5) : Math.round(isPos ? g5*0.4 : -g5*0.4);
+    totalScore += g5s;
+    gates.push({label:'BASIS', raw:g5Raw, pts:g5s, rawPts:g5, max:5});
   } else {
-    gates.push({ label: 'BASIS', raw: '—', pts: 0, rawPts: 0, max: 5 });
+    gates.push({label:'BASIS', raw:'—', pts:0, rawPts:0, max:5});
   }
 
-  /* ── Clamp score to ±25 ── */
   totalScore = Math.max(-25, Math.min(25, totalScore));
-
-  /* ── Label assignment ── */
-  // totalScore > 0 = LONG opportunity (negative funding confirmed)
-  // totalScore < 0 = SHORT opportunity (positive funding confirmed)
   const absScore = Math.abs(totalScore);
   let label, labelCls;
-
-  const isOverheat = absF > 0.20;
-  if (isOverheat) {
+  if (Math.abs(a.funding) > 0.20) {
     label = 'OVERHEATED'; labelCls = 'overheat';
   } else if (absScore >= 20) {
     label = totalScore > 0 ? 'STRONG BUY' : 'STRONG SELL';
@@ -939,206 +661,154 @@ function scoreAsset(a) {
     label = 'WEAK SIGNAL'; labelCls = 'weak';
   }
 
-  /* ── Squeeze warning logic ── */
   const warnings = [];
   const buyRatio = ls ? ls.buyRatio : 0.5;
   const sellRatio = ls ? ls.sellRatio : 0.5;
-  if (a.funding > 0.08 && buyRatio > 0.70)
-    warnings.push('⚠ CROWDED LONG — Long liquidation cascade risk if price reverses');
-  if (a.funding < -0.08 && sellRatio > 0.70)
-    warnings.push('⚠ CROWDED SHORT — Violent short squeeze possible');
-  if (absScore >= 20 && gates[4]?.pts !== undefined && Math.sign(gates[4].pts) !== Math.sign(totalScore))
-    warnings.push('⚠ FLOW DIVERGENCE — Strong signal but Gate 5 conflicts, watch for reversal');
-  if (absF > 0.20)
-    warnings.push('⚠ EXTREME FUNDING — High liquidation cascade risk regardless of direction');
+  if (a.funding > 0.08 && buyRatio > 0.70) warnings.push('CROWDED LONG — Long liquidation cascade risk if price reverses');
+  if (a.funding < -0.08 && sellRatio > 0.70) warnings.push('CROWDED SHORT — Violent short squeeze possible');
+  if (Math.abs(a.funding) > 0.20) warnings.push('EXTREME FUNDING — High liquidation cascade risk regardless of direction');
 
-  return { ...a, totalScore, gates, label, labelCls, warnings };
+  return {...a, totalScore, gates, label, labelCls, warnings};
 }
 
-/* ═══════════════════════════════════════════
-   THESIS BUILDER
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════════
+   THESIS
+═══════════════════════════════════ */
 function buildThesis(a) {
   const fStr = (a.funding>=0?'+':'')+a.funding.toFixed(4)+'%';
   const pStr = (a.price24hPct>=0?'+':'')+a.price24hPct.toFixed(2)+'%';
-  const lsStr = a.lsRatio
-    ? (a.lsRatio.buyRatio*100).toFixed(1)+'% longs / '+(a.lsRatio.sellRatio*100).toFixed(1)+'% shorts'
-    : 'L/S unavailable';
+  const lsStr = a.lsRatio ? (a.lsRatio.buyRatio*100).toFixed(1)+'% longs / '+(a.lsRatio.sellRatio*100).toFixed(1)+'% shorts' : 'L/S unavailable';
   const scoreStr = (a.totalScore > 0 ? '+' : '')+a.totalScore+'/25';
-
   if (a.labelCls === 'buy')
-    return `Negative funding (${fStr}) means shorts are paying longs — bears are over-leveraged. ${lsStr}. Price ${pStr} confirms downside pressure exists. Short squeeze conditions building. Score ${scoreStr}.`;
+    return `Negative funding (${fStr}) — shorts paying longs, bears over-leveraged. ${lsStr}. Price ${pStr}. Short squeeze conditions building. Score ${scoreStr}.`;
   if (a.labelCls === 'sell')
-    return `Positive funding (${fStr}) means longs are paying shorts — bulls are over-leveraged. ${lsStr}. Price ${pStr} confirms overbought conditions. Long liquidation cascade risk. Score ${scoreStr}.`;
+    return `Positive funding (${fStr}) — longs paying shorts, bulls over-leveraged. ${lsStr}. Price ${pStr}. Long liquidation cascade risk. Score ${scoreStr}.`;
   if (a.labelCls === 'overheat')
-    return `Extreme funding at ${fStr} — market severely over-leveraged. ${lsStr}. Price ${pStr}. High risk of violent move in either direction. Approach with caution. Score ${scoreStr}.`;
+    return `Extreme funding at ${fStr} — market severely over-leveraged. ${lsStr}. High risk of violent move either direction. Score ${scoreStr}.`;
   if (a.labelCls === 'watch')
-    return `Moderate signal (score ${scoreStr}). Funding ${fStr}. ${lsStr}. Price ${pStr}. Confluence partially aligned — wait for additional confirmation before entry.`;
-  return `Weak or conflicting signals. Funding ${fStr}. ${lsStr}. Price ${pStr}. Score ${scoreStr}. No clear directional edge — skip this setup.`;
+    return `Moderate signal (score ${scoreStr}). Funding ${fStr}. ${lsStr}. Price ${pStr}. Partial confluence — await confirmation before entry.`;
+  return `Weak or conflicting signals. Funding ${fStr}. ${lsStr}. Price ${pStr}. Score ${scoreStr}. No clear directional edge.`;
 }
 
-/* ═══════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════ */
-function fmtVol(v) {
-  if (v >= 1e9) return (v/1e9).toFixed(1)+'B';
-  if (v >= 1e6) return (v/1e6).toFixed(1)+'M';
-  if (v >= 1e3) return (v/1e3).toFixed(1)+'K';
-  return v.toFixed(0);
-}
-
-function nowStr() {
-  return new Date().toTimeString().slice(0,8);
-}
-
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════
    RENDER
-═══════════════════════════════════════════ */
+═══════════════════════════════════ */
 function renderCards() {
   const query = (document.getElementById('search-input')?.value || '').toUpperCase().trim();
   let data = scanData.slice();
-
-  // Filter by label
-  if (currentFilter !== 'all') {
-    const map = {
-      buy:      d => d.labelCls === 'buy',
-      sell:     d => d.labelCls === 'sell',
-      watch:    d => d.labelCls === 'watch',
-      mixed:    d => d.labelCls === 'mixed',
-      weak:     d => d.labelCls === 'weak',
-      overheat: d => d.labelCls === 'overheat',
-    };
-    if (map[currentFilter]) data = data.filter(map[currentFilter]);
-  }
-
-  // Search
+  const filterMap = {
+    buy:     d => d.labelCls === 'buy',
+    sell:    d => d.labelCls === 'sell',
+    watch:   d => d.labelCls === 'watch',
+    mixed:   d => d.labelCls === 'mixed',
+    weak:    d => d.labelCls === 'weak',
+    overheat:d => d.labelCls === 'overheat',
+  };
+  if (currentFilter !== 'all' && filterMap[currentFilter]) data = data.filter(filterMap[currentFilter]);
   if (query) data = data.filter(d => d.symbol.toUpperCase().includes(query));
 
-  const grid = document.getElementById('cards-grid');
-  document.getElementById('meta-count').textContent = data.length + ' assets';
+  document.getElementById('result-count').textContent = data.length + ' assets';
 
+  const grid = document.getElementById('cards-grid');
   if (!data.length) {
-    grid.innerHTML = `<div style="grid-column:1/-1; padding:40px 20px; text-align:center">
-      <div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase">No assets match filter</div>
-    </div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:40px 20px;text-align:center;font-family:var(--fm);font-size:.65rem;color:var(--text-dim);letter-spacing:2px">NO ASSETS MATCH CURRENT FILTER</div>`;
     return;
   }
-
   grid.innerHTML = data.map((a, i) => buildCardHTML(a, i)).join('');
-
-  // Animate pips after render
-  requestAnimationFrame(() => {
-    document.querySelectorAll('.pip-block').forEach((el, idx) => {
-      setTimeout(() => { el.style.transition = 'background 0.25s ease, box-shadow 0.25s ease'; }, idx * 15);
-    });
-  });
 }
 
 function buildCardHTML(a, idx) {
-  const delay = Math.min(idx * 40, 600);
+  const delay = Math.min(idx * 35, 500);
   const fSign = a.funding >= 0 ? '+' : '';
   const fCls  = a.funding >= 0 ? 'pos' : 'neg';
   const absScore = Math.abs(a.totalScore);
   const scorePct = (absScore / 25) * 100;
-  const scoreCls = a.labelCls === 'buy' ? 'buy' : a.labelCls === 'sell' ? 'sell' : a.labelCls === 'watch' ? 'watch' : 'mix';
+  const sfCls = a.labelCls === 'buy' ? 'sf-buy' : a.labelCls === 'sell' ? 'sf-sell' : a.labelCls === 'watch' ? 'sf-watch' : 'sf-mix';
   const scoreColor = a.totalScore > 0 ? 'pos' : a.totalScore < 0 ? 'neg' : 'neu';
+  const price = a.price > 0 ? '$'+a.price.toLocaleString(undefined,{maximumFractionDigits:4}) : '—';
 
-  /* badge html */
-  const badgeHtml = `<span class="card-badge badge-${a.labelCls}">${a.label}</span>`;
-
-  /* gate pips */
   const pipsHtml = a.gates.map(g => {
-    const dir = g.pts > 0 ? 'buy' : g.pts < 0 ? 'sell' : '';
-    const litPips = g.rawPts;
+    const dir = g.pts > 0 ? 'buy' : g.pts < 0 ? 'sell' : 'warn';
     const blocks = [1,2,3,4,5].map(n =>
-      `<div class="pip-block${n <= litPips ? ' lit-'+dir : ''}"></div>`
+      `<div class="pip-block${n <= g.rawPts ? ' lit-'+dir : ''}"></div>`
     ).join('');
-    return `<div class="gate-pip">
-      <div class="pip-blocks">${blocks}</div>
-      <div class="pip-label">${g.label}</div>
-    </div>`;
+    return `<div class="gate-pip"><div class="pip-blocks">${blocks}</div><div class="pip-lbl">${g.label}</div></div>`;
   }).join('');
 
-  /* detail rows */
-  const detailRows = a.gates.map(g => {
+  const detailRows = a.gates.map((g, gi) => {
     const sCls = g.pts > 0 ? 'pos' : g.pts < 0 ? 'neg' : 'neu';
-    const dir = g.pts > 0 ? 'buy' : g.pts < 0 ? 'sell' : '';
-    const miniPips = [1,2,3,4,5].map(n =>
-      `<span class="${n <= g.rawPts ? 'on-'+dir : ''}"></span>`
-    ).join('');
+    const dir  = g.pts > 0 ? 'buy' : g.pts < 0 ? 'sell' : '';
+    const mini = [1,2,3,4,5].map(n => `<span class="${n <= g.rawPts && dir ? 'on-'+dir : ''}"></span>`).join('');
     return `<div class="detail-row">
-      <div class="detail-gate-name">G${a.gates.indexOf(g)+1} ${g.label}</div>
-      <div class="detail-mid"><div class="detail-pip-mini">${miniPips}</div></div>
-      <div class="detail-gate-raw">${g.raw}</div>
-      <div class="detail-gate-score ${sCls}">${g.pts > 0 ? '+' : ''}${g.pts}</div>
+      <div class="detail-gate-name">G${gi+1} ${g.label}</div>
+      <div class="detail-mini-pips">${mini}</div>
+      <div class="detail-raw">${g.raw}</div>
+      <div class="detail-pts ${sCls}">${g.pts > 0 ? '+' : ''}${g.pts}</div>
     </div>`;
   }).join('');
 
-  /* warnings */
-  const warningsHtml = a.warnings.length
-    ? a.warnings.map(w => `<div class="detail-warning">${w}</div>`).join('')
-    : '';
+  const warningsHtml = a.warnings.map(w =>
+    `<div class="detail-warning">⚠ ${w}</div>`
+  ).join('');
 
-  /* thesis */
-  const thesis = buildThesis(a);
-
-  return `<div class="card" style="animation-delay:${delay}ms" onclick="toggleDetail(this)">
-    <div class="card-top">
+  return `<div class="card ${a.labelCls}" style="animation-delay:${delay}ms" onclick="toggleDetail(this)">
+    <div class="card-head">
       <div>
         <div class="card-sym">${a.symbol}</div>
-        <div class="card-ex">${a.exchange} · ${a.price > 0 ? '$'+a.price.toLocaleString(undefined,{maximumFractionDigits:4}) : '—'}</div>
+        <div class="card-ex-lbl">${a.exchange} · ${price}</div>
       </div>
-      ${badgeHtml}
+      <span class="card-badge badge-${a.labelCls}">${a.label}</span>
     </div>
-    <div class="card-funding">
+    <div class="card-rate-row">
       <div class="card-rate ${fCls}">${fSign}${a.funding.toFixed(4)}%</div>
-      <div class="card-rate-label">funding rate</div>
+      <div class="rate-lbl">FUNDING RATE</div>
     </div>
     <div class="card-score-row">
-      <div class="card-score-num ${scoreColor}">${a.totalScore > 0 ? '+' : ''}${a.totalScore}/25</div>
-      <div class="score-track"><div class="score-fill ${scoreCls}" style="width:${scorePct}%"></div></div>
+      <div class="score-num ${scoreColor}">${a.totalScore > 0 ? '+' : ''}${a.totalScore}/25</div>
+      <div class="score-track"><div class="score-fill ${sfCls}" style="width:${scorePct}%"></div></div>
     </div>
     <div class="card-gates">${pipsHtml}</div>
     <div class="card-detail">
       ${warningsHtml}
       ${detailRows}
-      <div class="detail-thesis">${thesis}</div>
+      <div class="detail-thesis">${buildThesis(a)}</div>
     </div>
   </div>`;
 }
 
 function toggleDetail(card) {
-  const detail = card.querySelector('.card-detail');
-  detail.classList.toggle('open');
+  card.querySelector('.card-detail').classList.toggle('open');
 }
 
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════
    MAIN SCAN
-═══════════════════════════════════════════ */
+═══════════════════════════════════ */
 async function runScan() {
-  const btn = document.getElementById('scan-btn');
+  const btn   = document.getElementById('scan-btn');
   const label = document.getElementById('scan-label');
+  const icon  = document.getElementById('scan-icon');
   btn.classList.add('loading');
+  icon.style.animation = 'spin 1s linear infinite';
   label.textContent = 'SCANNING...';
+  setStatus('loading', currentEx.toUpperCase() + ' — FETCHING...');
 
-  document.getElementById('progress-wrap').style.display = 'block';
-  document.getElementById('cards-grid').innerHTML = '';
-  document.getElementById('idle-state') && (document.getElementById('idle-state').style.display = 'none');
+  document.getElementById('prog-wrap').style.display = 'block';
+  document.getElementById('cards-grid').innerHTML = `<div style="grid-column:1/-1"><div class="load-state">
+    <div class="load-ring"></div><div class="load-txt" id="load-txt">INITIALISING...</div></div></div>`;
 
   try {
-    /* Phase 1: Bulk fetch */
     setProgress(10, 'PHASE 1/3 — FETCHING MARKET DATA...');
+    document.getElementById('load-txt') && (document.getElementById('load-txt').textContent = 'FETCHING ALL TICKERS...');
     const raw = currentEx === 'bybit' ? await fetchBybitBulk() : await fetchBinanceBulk();
-
     if (!raw.length) throw new Error('No data returned from exchange API');
 
-    /* Phase 2: Funding gate */
     setProgress(30, `PHASE 2/3 — FUNDING GATE (|rate| ≥ ${FUNDING_GATE}%)...`);
     const gated = raw.filter(a => Math.abs(a.funding) >= FUNDING_GATE);
     await new Promise(r => setTimeout(r, 150));
 
-    /* Phase 3: Enrich */
     setProgress(45, `PHASE 3/3 — ENRICHING ${gated.length} GATED COINS...`);
+    document.getElementById('load-txt') && (document.getElementById('load-txt').textContent = 'ENRICHING ' + gated.length + ' GATED COINS...');
+
     for (let i = 0; i < gated.length; i += BATCH_SIZE) {
       const batch = gated.slice(i, i + BATCH_SIZE);
       await Promise.all(batch.map(async a => {
@@ -1146,21 +816,17 @@ async function runScan() {
           a.lsRatio = await fetchBybitLS(a.fullSym);
         } else {
           const [ls, taker] = await Promise.all([fetchBinanceLS(a.fullSym), fetchBinanceTaker(a.fullSym)]);
-          a.lsRatio = ls;
-          a.takerFlow = taker;
+          a.lsRatio = ls; a.takerFlow = taker;
         }
       }));
       const pct = 45 + Math.round(((i + BATCH_SIZE) / gated.length) * 50);
       setProgress(Math.min(pct, 95), `ENRICHED ${Math.min(i + BATCH_SIZE, gated.length)}/${gated.length}...`);
     }
 
-    /* Score & sort by |score| desc */
-    scanData = gated.map(a => scoreAsset(a)).sort((a,b) => Math.abs(b.totalScore) - Math.abs(a.totalScore));
-    lastScanTs = nowStr();
-
+    scanData = gated.map(a => scoreAsset(a)).sort((a, b) => Math.abs(b.totalScore) - Math.abs(a.totalScore));
+    lastScanTs = new Date().toLocaleTimeString('en-US',{hour12:false});
     setProgress(100, `COMPLETE — ${scanData.length} COINS ANALYSED`);
 
-    /* Update summary */
     document.getElementById('s-total').textContent  = raw.length;
     document.getElementById('s-gated').textContent  = gated.length;
     document.getElementById('s-buy').textContent    = scanData.filter(d => d.labelCls === 'buy').length;
@@ -1168,31 +834,34 @@ async function runScan() {
     document.getElementById('s-watch').textContent  = scanData.filter(d => d.labelCls === 'watch').length;
     document.getElementById('s-mixed').textContent  = scanData.filter(d => d.labelCls === 'mixed').length;
 
-    /* Show UI elements */
-    document.getElementById('summary-strip').classList.add('visible');
-    document.getElementById('filter-bar').classList.add('visible');
-    document.getElementById('search-wrap').classList.add('visible');
-    document.getElementById('result-meta').classList.add('visible');
-    document.getElementById('meta-ts').textContent = 'LAST SCAN: ' + lastScanTs;
+    document.getElementById('stats-row').style.display = 'grid';
+    document.getElementById('filter-bar').classList.add('vis');
+    document.getElementById('result-meta').classList.add('vis');
+    document.getElementById('result-ts').textContent = 'LAST SCAN: ' + lastScanTs;
+    document.getElementById('footer-ex').textContent = currentEx === 'bybit' ? 'BYBIT LINEAR PERPETUALS' : 'BINANCE FUTURES PERPETUALS';
 
     currentFilter = 'all';
     setFilter('all');
     renderCards();
+    setStatus('ok', currentEx.toUpperCase() + ' — ' + scanData.length + ' ANALYSED');
 
   } catch(e) {
-    document.getElementById('cards-grid').innerHTML = `<div style="padding:40px 20px; text-align:center">
-      <div style="font-size:0.65rem; color:var(--red); letter-spacing:0.12em; text-transform:uppercase">SCAN FAILED — ${e.message}</div>
-    </div>`;
+    document.getElementById('cards-grid').innerHTML = `<div style="grid-column:1/-1"><div class="load-state">
+      <div style="font-family:var(--fd);font-size:.68rem;color:var(--bear);letter-spacing:2px">SCAN FAILED</div>
+      <div style="font-family:var(--fm);font-size:.6rem;color:var(--text-dim);letter-spacing:1px;margin-top:6px">${e.message}</div>
+    </div></div>`;
     setProgress(100, 'SCAN FAILED');
+    setStatus('error', 'SCAN FAILED');
   }
 
-  setTimeout(() => {
-    document.getElementById('progress-wrap').style.display = 'none';
-  }, 1200);
-
+  setTimeout(() => { document.getElementById('prog-wrap').style.display = 'none'; }, 1400);
   btn.classList.remove('loading');
+  icon.style.animation = '';
   label.textContent = 'RE-SCAN';
 }
+
+/* INIT */
+setEx('bybit');
 </script>
 </body>
 </html>
