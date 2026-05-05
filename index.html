@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>ATL · APEX — Signal Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --bg:       #080a06;
+  --bg2:      #0d1009;
+  --bg3:      #12160e;
+  --bg4:      #181e12;
+  --border:   rgba(180,210,80,0.10);
+  --border2:  rgba(180,210,80,0.18);
+  --lime:     #c8f135;
+  --lime-dim: rgba(200,241,53,0.10);
+  --lime-glow:rgba(200,241,53,0.25);
+  --red:      #ff4c2e;
+  --red-dim:  rgba(255,76,46,0.10);
+  --amber:    #f5a623;
+  --amber-dim:rgba(245,166,35,0.10);
+  --text:     #d4dcc0;
+  --sub:      #7a8a60;
+  --muted:    #3d4a2e;
+  --font:     'Azeret Mono', monospace;
+}
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* grain overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.5;
+}
+
+/* scanlines */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+}
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+#app {
+  position: relative; z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 12px 80px;
+}
+
+/* ═══════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════ */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,10,6,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.nav-logo {
+  font-size: 1rem; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--lime); text-transform: uppercase;
+}
+.nav-logo span { color: var(--sub); font-weight: 400; }
+
+.nav-right {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.nav-pulse {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.4; transform:scale(0.7); }
+}
+
+.nav-clock {
+  font-size: 0.72rem; color: var(--sub); letter-spacing: 0.1em;
+  font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════
+   CONTROL BAR
+═══════════════════════════════════════════ */
+.ctrl-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin-top: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.ex-btn {
+  background: var(--bg2); border: none; cursor: pointer;
+  padding: 14px 12px;
+  font-family: var(--font); font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--sub);
+  transition: background 0.2s, color 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  position: relative; overflow: hidden;
+}
+.ex-btn::before {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px; background: var(--lime);
+  transform: scaleX(0); transition: transform 0.2s;
+}
+.ex-btn.active { background: var(--bg3); color: var(--lime); }
+.ex-btn.active::before { transform: scaleX(1); }
+.ex-btn:hover:not(.active) { background: var(--bg3); color: var(--text); }
+
+.ex-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--muted);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.ex-btn.active .ex-dot {
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime);
+}
+
+/* ═══════════════════════════════════════════
+   SCAN BUTTON
+═══════════════════════════════════════════ */
+.scan-wrap {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.scan-btn {
+  width: 100%;
+  background: var(--lime-dim);
+  border: 1px solid var(--lime);
+  color: var(--lime);
+  font-family: var(--font); font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  position: relative; overflow: hidden;
+}
+.scan-btn::before {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(200,241,53,0.12), transparent);
+  transition: left 0.5s;
+}
+.scan-btn:hover { background: rgba(200,241,53,0.16); box-shadow: 0 0 24px var(--lime-glow); }
+.scan-btn:hover::before { left: 100%; }
+.scan-btn:active { transform: scale(0.99); }
+.scan-btn.loading {
+  pointer-events: none;
+  color: var(--sub);
+  border-color: var(--border2);
+  background: var(--bg2);
+}
+
+.scan-icon { font-size: 1rem; }
+.scan-btn.loading .scan-icon { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════════
+   PROGRESS
+═══════════════════════════════════════════ */
+#progress-wrap {
+  display: none;
+  padding: 10px 0 6px;
+  border-bottom: 1px solid var(--border);
+}
+.prog-track {
+  height: 2px; background: var(--bg4);
+  position: relative; overflow: hidden;
+}
+.prog-fill {
+  height: 100%; width: 0%;
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime);
+  transition: width 0.4s ease;
+}
+.prog-label {
+  font-size: 0.62rem; color: var(--sub); letter-spacing: 0.1em;
+  text-transform: uppercase; margin-top: 5px;
+}
+
+/* ═══════════════════════════════════════════
+   SUMMARY STRIP
+═══════════════════════════════════════════ */
+#summary-strip {
+  display: none;
+  gap: 1px;
+  padding: 1px 0;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+#summary-strip::-webkit-scrollbar { display: none; }
+#summary-strip.visible { display: flex; }
+
+.sum-pill {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 12px 20px;
+  background: var(--bg2);
+  min-width: 90px;
+  gap: 3px;
+}
+.sum-pill:first-child { flex: 1 0 auto; }
+
+.sum-val {
+  font-size: 1.5rem; font-weight: 700; line-height: 1;
+  color: var(--text);
+}
+.sum-val.lime { color: var(--lime); }
+.sum-val.red { color: var(--red); }
+.sum-val.amber { color: var(--amber); }
+.sum-val.sub { color: var(--sub); }
+
+.sum-label {
+  font-size: 0.58rem; color: var(--sub); letter-spacing: 0.12em;
+  text-transform: uppercase; font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════
+   FILTER TABS
+═══════════════════════════════════════════ */
+#filter-bar {
+  display: none;
+  gap: 1px;
+  padding: 10px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#filter-bar::-webkit-scrollbar { display: none; }
+#filter-bar.visible { display: flex; }
+
+.f-tab {
+  flex: 0 0 auto;
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--sub); cursor: pointer;
+  font-family: var(--font); font-size: 0.64rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 8px 14px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.f-tab:hover { background: var(--bg3); color: var(--text); border-color: var(--border2); }
+.f-tab.active-all  { background: var(--bg3); color: var(--text); border-color: var(--border2); }
+.f-tab.active-buy  { background: var(--lime-dim); color: var(--lime); border-color: var(--lime); }
+.f-tab.active-sell { background: var(--red-dim);  color: var(--red);  border-color: var(--red); }
+.f-tab.active-watch{ background: var(--amber-dim);color: var(--amber);border-color: var(--amber); }
+.f-tab.active-mix  { background: var(--bg3); color: var(--sub); border-color: var(--border2); }
+
+/* meta row */
+#result-meta {
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0 10px;
+  border-bottom: 1px solid var(--border);
+}
+#result-meta.visible { display: flex; }
+.meta-count { font-size: 0.65rem; color: var(--sub); letter-spacing: 0.1em; }
+.meta-ts    { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.08em; }
+
+/* ═══════════════════════════════════════════
+   CARDS GRID
+═══════════════════════════════════════════ */
+#cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px;
+  background: var(--border);
+  margin-top: 1px;
+}
+@media (min-width: 600px) {
+  #cards-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 960px) {
+  #cards-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+/* ═══════════════════════════════════════════
+   CARD
+═══════════════════════════════════════════ */
+.card {
+  background: var(--bg2);
+  display: flex; flex-direction: column;
+  opacity: 0; transform: translateY(10px);
+  animation: card-in 0.3s ease forwards;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.card:hover { background: var(--bg3); }
+
+@keyframes card-in {
+  to { opacity:1; transform:translateY(0); }
+}
+
+/* card top row */
+.card-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 14px 14px 10px;
+  gap: 8px;
+}
+
+.card-sym {
+  font-size: 1.05rem; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--text); line-height: 1;
+}
+.card-ex {
+  font-size: 0.58rem; color: var(--muted); letter-spacing: 0.1em;
+  text-transform: uppercase; margin-top: 3px;
+}
+
+.card-badge {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; padding: 4px 8px;
+  flex-shrink: 0;
+}
+.badge-buy   { background: var(--lime-dim); color: var(--lime); border: 1px solid rgba(200,241,53,0.3); }
+.badge-sell  { background: var(--red-dim);  color: var(--red);  border: 1px solid rgba(255,76,46,0.3); }
+.badge-watch { background: var(--amber-dim);color: var(--amber);border: 1px solid rgba(245,166,35,0.3); }
+.badge-mixed { background: var(--bg3); color: var(--sub); border: 1px solid var(--border); }
+.badge-weak  { background: var(--bg3); color: var(--muted); border: 1px solid var(--border); }
+.badge-overheat { background: rgba(255,76,46,0.18); color: var(--red); border: 1px solid var(--red); }
+
+/* card funding row */
+.card-funding {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 0 14px 10px;
+}
+.card-rate {
+  font-size: 1.5rem; font-weight: 700; line-height: 1;
+}
+.card-rate.pos { color: var(--red); }   /* positive funding = short opportunity = red */
+.card-rate.neg { color: var(--lime); }  /* negative funding = long opportunity = lime */
+
+.card-rate-label {
+  font-size: 0.6rem; color: var(--sub); letter-spacing: 0.1em;
+  text-transform: uppercase; font-weight: 400;
+}
+
+/* score total */
+.card-score-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 14px 12px;
+}
+.card-score-num {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em;
+  min-width: 48px;
+}
+.card-score-num.pos { color: var(--lime); }
+.card-score-num.neg { color: var(--red); }
+.card-score-num.neu { color: var(--sub); }
+
+.score-track {
+  flex: 1; height: 3px; background: var(--bg4);
+  position: relative;
+}
+.score-fill {
+  height: 100%; max-width: 100%;
+  transition: width 0.6s ease 0.2s;
+}
+.score-fill.buy  { background: var(--lime); box-shadow: 0 0 6px var(--lime); }
+.score-fill.sell { background: var(--red);  box-shadow: 0 0 6px var(--red); }
+.score-fill.watch{ background: var(--amber);}
+.score-fill.mix  { background: var(--sub); }
+
+/* ═══════════════════════════════════════════
+   GATE PIPS STRIP
+═══════════════════════════════════════════ */
+.card-gates {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 1px; margin: 0 14px 14px;
+}
+
+.gate-pip {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  padding: 6px 4px;
+  background: var(--bg4);
+  transition: background 0.15s;
+  position: relative;
+}
+
+.pip-blocks {
+  display: flex; gap: 2px;
+}
+.pip-block {
+  width: 5px; height: 10px;
+  background: var(--muted);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.pip-block.lit-buy  { background: var(--lime); }
+.pip-block.lit-sell { background: var(--red); }
+.pip-block.lit-warn { background: var(--amber); }
+
+.pip-label {
+  font-size: 0.48rem; color: var(--muted); letter-spacing: 0.08em;
+  text-transform: uppercase; text-align: center;
+  font-weight: 600;
+}
+.pip-val {
+  font-size: 0.54rem; color: var(--sub); text-align: center;
+}
+
+/* ═══════════════════════════════════════════
+   CARD EXPANDED DETAIL
+═══════════════════════════════════════════ */
+.card-detail {
+  display: none;
+  border-top: 1px solid var(--border);
+  padding: 12px 14px 14px;
+  flex-direction: column; gap: 8px;
+  background: var(--bg);
+}
+.card-detail.open { display: flex; }
+
+.detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 7px;
+}
+.detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.detail-gate-name {
+  font-size: 0.62rem; color: var(--sub); letter-spacing: 0.1em;
+  text-transform: uppercase; font-weight: 600;
+}
+.detail-gate-raw {
+  font-size: 0.62rem; color: var(--text); text-align: right;
+}
+.detail-gate-score {
+  font-size: 0.65rem; font-weight: 700;
+  min-width: 36px; text-align: right;
+}
+.detail-gate-score.pos { color: var(--lime); }
+.detail-gate-score.neg { color: var(--red); }
+.detail-gate-score.neu { color: var(--muted); }
+
+.detail-mid { flex: 1; padding: 0 8px; }
+.detail-pip-mini { display: flex; gap: 2px; justify-content: center; }
+.detail-pip-mini span {
+  width: 4px; height: 8px; background: var(--muted);
+}
+.detail-pip-mini span.on-buy  { background: var(--lime); }
+.detail-pip-mini span.on-sell { background: var(--red); }
+
+.detail-thesis {
+  font-size: 0.65rem; color: var(--sub); line-height: 1.6;
+  padding-top: 8px; border-top: 1px solid var(--border);
+  font-weight: 400;
+}
+
+/* warning badge in detail */
+.detail-warning {
+  font-size: 0.62rem; color: var(--amber);
+  background: var(--amber-dim); border: 1px solid rgba(245,166,35,0.3);
+  padding: 6px 10px; font-weight: 600; letter-spacing: 0.06em;
+}
+
+/* ═══════════════════════════════════════════
+   IDLE / EMPTY STATES
+═══════════════════════════════════════════ */
+#idle-state {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 60px 20px; gap: 12px; text-align: center;
+}
+.idle-glyph {
+  font-size: 2.5rem; opacity: 0.15;
+  animation: idle-float 4s ease-in-out infinite;
+}
+@keyframes idle-float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.idle-title { font-size: 0.72rem; color: var(--sub); letter-spacing: 0.16em; text-transform: uppercase; }
+.idle-sub   { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; }
+
+/* ═══════════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════════ */
+.search-wrap {
+  display: none;
+  padding: 10px 0 0;
+}
+.search-wrap.visible { display: block; }
+.search-input {
+  width: 100%;
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--font); font-size: 0.72rem;
+  padding: 10px 12px; letter-spacing: 0.06em;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-input::placeholder { color: var(--muted); }
+.search-input:focus { border-color: var(--border2); }
+
+/* ═══════════════════════════════════════════
+   MOBILE OVERRIDES
+═══════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .card-sym { font-size: 0.95rem; }
+  .card-rate { font-size: 1.3rem; }
+  .sum-val { font-size: 1.3rem; }
+  nav { padding: 12px 0; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">ATL <span>·</span> APEX</div>
+    <div class="nav-right">
+      <div class="nav-pulse"></div>
+      <div class="nav-clock" id="nav-clock">--:--:--</div>
+    </div>
+  </nav>
+
+  <!-- EXCHANGE SELECT -->
+  <div class="ctrl-bar">
+    <button class="ex-btn active" id="ex-bybit" onclick="setEx('bybit')">
+      <span class="ex-dot"></span> Bybit Linear
+    </button>
+    <button class="ex-btn" id="ex-binance" onclick="setEx('binance')">
+      <span class="ex-dot"></span> Binance Futures
+    </button>
+  </div>
+
+  <!-- SCAN -->
+  <div class="scan-wrap">
+    <button class="scan-btn" id="scan-btn" onclick="runScan()">
+      <span class="scan-icon">⟳</span>
+      <span id="scan-label">INITIATE SCAN</span>
+    </button>
+  </div>
+
+  <!-- PROGRESS -->
+  <div id="progress-wrap">
+    <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="prog-label" id="prog-label">INITIALISING...</div>
+  </div>
+
+  <!-- SUMMARY STRIP -->
+  <div id="summary-strip">
+    <div class="sum-pill">
+      <div class="sum-val sub" id="s-total">0</div>
+      <div class="sum-label">Scanned</div>
+    </div>
+    <div class="sum-pill">
+      <div class="sum-val" id="s-gated">0</div>
+      <div class="sum-label">Gated</div>
+    </div>
+    <div class="sum-pill">
+      <div class="sum-val lime" id="s-buy">0</div>
+      <div class="sum-label">Strong Buy</div>
+    </div>
+    <div class="sum-pill">
+      <div class="sum-val red" id="s-sell">0</div>
+      <div class="sum-label">Strong Sell</div>
+    </div>
+    <div class="sum-pill">
+      <div class="sum-val amber" id="s-watch">0</div>
+      <div class="sum-label">Watch</div>
+    </div>
+    <div class="sum-pill">
+      <div class="sum-val sub" id="s-mixed">0</div>
+      <div class="sum-label">Mixed</div>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap" id="search-wrap">
+    <input class="search-input" id="search-input" placeholder="SEARCH// BTC..." oninput="renderCards()"/>
+  </div>
+
+  <!-- FILTER TABS -->
+  <div id="filter-bar">
+    <button class="f-tab active-all" data-f="all"      onclick="setFilter('all')">ALL</button>
+    <button class="f-tab"           data-f="buy"       onclick="setFilter('buy')">STRONG BUY</button>
+    <button class="f-tab"           data-f="sell"      onclick="setFilter('sell')">STRONG SELL</button>
+    <button class="f-tab"           data-f="watch"     onclick="setFilter('watch')">WATCH</button>
+    <button class="f-tab"           data-f="mixed"     onclick="setFilter('mixed')">MIXED</button>
+    <button class="f-tab"           data-f="weak"      onclick="setFilter('weak')">WEAK SIGNAL</button>
+    <button class="f-tab"           data-f="overheat"  onclick="setFilter('overheat')">OVERHEATED</button>
+  </div>
+
+  <!-- RESULT META -->
+  <div id="result-meta">
+    <div class="meta-count" id="meta-count">— assets</div>
+    <div class="meta-ts"    id="meta-ts">—</div>
+  </div>
+
+  <!-- CARDS -->
+  <div id="cards-grid">
+    <div id="idle-state">
+      <div class="idle-glyph">◎</div>
+      <div class="idle-title">Signal Intelligence Ready</div>
+      <div class="idle-sub">Select exchange · Initiate scan</div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let currentEx = 'bybit';
+let scanData   = [];
+let currentFilter = 'all';
+let lastScanTs = null;
+
+const FUNDING_GATE = 0.03; // |rate| must exceed this to pass Gate 1
+const BATCH_SIZE   = 8;
+
+/* ═══════════════════════════════════════════
+   CLOCK
+═══════════════════════════════════════════ */
+function tickClock() {
+  const now = new Date();
+  document.getElementById('nav-clock').textContent =
+    now.toTimeString().slice(0,8);
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+/* ═══════════════════════════════════════════
+   EXCHANGE SELECT
+═══════════════════════════════════════════ */
+function setEx(ex) {
+  currentEx = ex;
+  document.getElementById('ex-bybit').classList.toggle('active', ex === 'bybit');
+  document.getElementById('ex-binance').classList.toggle('active', ex === 'binance');
+}
+
+/* ═══════════════════════════════════════════
+   FILTER
+═══════════════════════════════════════════ */
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.f-tab').forEach(btn => {
+    const fv = btn.getAttribute('data-f');
+    btn.className = 'f-tab';
+    if (fv === f) {
+      const map = { all:'active-all', buy:'active-buy', sell:'active-sell',
+                    watch:'active-watch', mixed:'active-mix', weak:'active-mix', overheat:'active-sell' };
+      btn.classList.add(map[f] || 'active-all');
+    }
+  });
+  renderCards();
+}
+
+/* ═══════════════════════════════════════════
+   SAFE FETCH
+═══════════════════════════════════════════ */
+async function safeFetch(url, jsonParse = true) {
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) return null;
+    return jsonParse ? await r.json() : await r.text();
+  } catch { return null; }
+}
+
+/* ═══════════════════════════════════════════
+   API — BULK FETCH
+═══════════════════════════════════════════ */
+async function fetchBybitBulk() {
+  const res = await safeFetch('https://api.bybit.com/v5/market/tickers?category=linear');
+  if (!res?.result?.list) return [];
+  return res.result.list
+    .filter(t => t.symbol.endsWith('USDT') && t.fundingRate !== undefined && t.fundingRate !== '')
+    .map(t => ({
+      symbol:      t.symbol.replace('USDT',''),
+      fullSym:     t.symbol,
+      exchange:    'Bybit',
+      funding:     parseFloat(t.fundingRate)*100,
+      price:       parseFloat(t.lastPrice)||0,
+      price24hPct: parseFloat(t.price24hPcnt)*100,
+      oi:          parseFloat(t.openInterestValue)||0,
+      vol24h:      parseFloat(t.turnover24h)||0,
+      markPrice:   parseFloat(t.markPrice)||0,
+      indexPrice:  parseFloat(t.indexPrice)||0,
+      nextFunding: parseInt(t.nextFundingTime)||0,
+    }));
+}
+
+async function fetchBinanceBulk() {
+  const [funding, ticker] = await Promise.all([
+    safeFetch('https://fapi.binance.com/fapi/v1/premiumIndex'),
+    safeFetch('https://fapi.binance.com/fapi/v1/ticker/24hr'),
+  ]);
+  if (!funding || !Array.isArray(funding)) return [];
+  const tickerMap = {};
+  if (ticker && Array.isArray(ticker)) {
+    for (const t of ticker) {
+      tickerMap[t.symbol] = { vol24h: parseFloat(t.quoteVolume)||0, price24hPct: parseFloat(t.priceChangePercent)||0 };
+    }
+  }
+  return funding
+    .filter(t => t.symbol.endsWith('USDT') && t.lastFundingRate !== undefined)
+    .map(t => ({
+      symbol:      t.symbol.replace('USDT',''),
+      fullSym:     t.symbol,
+      exchange:    'Binance',
+      funding:     parseFloat(t.lastFundingRate)*100,
+      price:       parseFloat(t.markPrice)||parseFloat(t.indexPrice)||0,
+      price24hPct: tickerMap[t.symbol]?.price24hPct||0,
+      oi:          0,
+      vol24h:      tickerMap[t.symbol]?.vol24h||0,
+      markPrice:   parseFloat(t.markPrice)||0,
+      indexPrice:  parseFloat(t.indexPrice)||0,
+      nextFunding: parseInt(t.nextFundingTime)||0,
+    }));
+}
+
+/* ═══════════════════════════════════════════
+   API — PER-SYMBOL ENRICHMENT
+═══════════════════════════════════════════ */
+async function fetchBybitLS(symbol) {
+  const res = await safeFetch(`https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=${symbol}&period=1h&limit=1`);
+  const item = res?.result?.list?.[0];
+  if (!item) return null;
+  return { buyRatio: parseFloat(item.buyRatio)||0.5, sellRatio: parseFloat(item.sellRatio)||0.5 };
+}
+
+async function fetchBinanceLS(symbol) {
+  const res = await safeFetch(`https://fapi.binance.com/futures/data/topLongShortAccountRatio?symbol=${symbol}&period=1h&limit=1`);
+  const item = Array.isArray(res) ? res[0] : null;
+  if (!item) return null;
+  return { buyRatio: parseFloat(item.longAccount)||0.5, sellRatio: parseFloat(item.shortAccount)||0.5 };
+}
+
+async function fetchBinanceTaker(symbol) {
+  const res = await safeFetch(`https://fapi.binance.com/futures/data/takerlongshortRatio?symbol=${symbol}&period=1h&limit=1`);
+  const item = Array.isArray(res) ? res[0] : null;
+  if (!item) return null;
+  return { buySellRatio: parseFloat(item.buySellRatio)||1, buyVol: parseFloat(item.buyVol)||0, sellVol: parseFloat(item.sellVol)||0 };
+}
+
+/* ═══════════════════════════════════════════
+   PROGRESS HELPERS
+═══════════════════════════════════════════ */
+function setProgress(pct, label) {
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-label').textContent = label;
+}
+
+/* ═══════════════════════════════════════════
+   PHASE 2 SCORING ENGINE — 5 Gates × 5pts = 25
+   Direction logic (corrected):
+     Negative funding → LONG opportunity → positive score
+     Positive funding → SHORT opportunity → negative score
+═══════════════════════════════════════════ */
+function scoreAsset(a) {
+  let totalScore = 0;
+  const gates = [];
+  const isPos = a.funding > 0;
+  const absF  = Math.abs(a.funding);
+
+  /* ── GATE 1: Funding Rate magnitude (1–5, direction sets overall sign) ── */
+  let g1 = 0;
+  if      (absF > 0.20) g1 = 5;
+  else if (absF > 0.12) g1 = 4;
+  else if (absF > 0.08) g1 = 3;
+  else if (absF > 0.05) g1 = 2;
+  else if (absF > 0.03) g1 = 1;
+  // positive funding = short opp → score negative; negative funding = long opp → positive
+  const g1Signed = isPos ? -g1 : g1;
+  totalScore += g1Signed;
+  gates.push({
+    label: 'RATE', raw: (a.funding>=0?'+':'')+a.funding.toFixed(4)+'%',
+    pts: g1Signed, rawPts: g1, max: 5
+  });
+
+  /* ── GATE 2: L/S Ratio — who's overextended (0–5) ── */
+  let g2 = 0;
+  const ls = a.lsRatio;
+  if (ls) {
+    const dominance = Math.abs(ls.buyRatio - ls.sellRatio);
+    if      (dominance > 0.25) g2 = 5;
+    else if (dominance > 0.15) g2 = 4;
+    else if (dominance > 0.08) g2 = 3;
+    else if (dominance > 0.05) g2 = 2;
+    else if (dominance > 0.02) g2 = 1;
+
+    // Positive funding: longs dominant = crowded long = confirms SHORT opp → negative
+    // Negative funding: shorts dominant = crowded short = confirms LONG opp → positive
+    const longsLeading = ls.buyRatio > ls.sellRatio;
+    // Confluence: funding direction aligns with dominant side → confirms signal
+    const aligned = (isPos && longsLeading) || (!isPos && !longsLeading);
+    const g2Signed = aligned ? (isPos ? -g2 : g2) : (isPos ? g2*0.3 : -g2*0.3);
+    totalScore += Math.round(g2Signed);
+    gates.push({
+      label: 'L/S', raw: (ls.buyRatio*100).toFixed(0)+'% L / '+(ls.sellRatio*100).toFixed(0)+'% S',
+      pts: Math.round(g2Signed), rawPts: g2, max: 5
+    });
+  } else {
+    gates.push({ label: 'L/S', raw: 'N/A', pts: 0, rawPts: 0, max: 5 });
+  }
+
+  /* ── GATE 3: OI Context — V/OI conviction ratio (0–5) ── */
+  let g3 = 0;
+  if (a.oi > 0 && a.vol24h > 0) {
+    const voi = a.vol24h / a.oi;
+    if      (voi > 4)   g3 = 5;
+    else if (voi > 2)   g3 = 4;
+    else if (voi > 1)   g3 = 3;
+    else if (voi > 0.5) g3 = 2;
+    else if (voi > 0.3) g3 = 1;
+    const g3Signed = isPos ? -g3 : g3;
+    totalScore += g3Signed;
+    const voiStr = a.vol24h > 0 && a.oi > 0 ? 'V/OI: '+(a.vol24h/a.oi).toFixed(2)+'x' : 'N/A';
+    gates.push({ label: 'OI', raw: voiStr, pts: g3Signed, rawPts: g3, max: 5 });
+  } else {
+    gates.push({ label: 'OI', raw: 'N/A', pts: 0, rawPts: 0, max: 5 });
+  }
+
+  /* ── GATE 4: Price 24h — trend alignment (0–5) ── */
+  let g4 = 0;
+  const p24 = a.price24hPct;
+  const pAbs = Math.abs(p24);
+  if      (pAbs > 10) g4 = 5;
+  else if (pAbs > 5)  g4 = 4;
+  else if (pAbs > 2)  g4 = 3;
+  else if (pAbs > 1)  g4 = 2;
+  else if (pAbs > 0.5) g4 = 1;
+
+  // Positive funding + price up = overbought longs = confirms SHORT
+  // Negative funding + price down = oversold shorts = confirms LONG
+  const priceAligned = (isPos && p24 > 0) || (!isPos && p24 < 0);
+  const g4Signed = priceAligned ? (isPos ? -g4 : g4) : (isPos ? g4*0.4 : -g4*0.4);
+  totalScore += Math.round(g4Signed);
+  gates.push({
+    label: 'P24H', raw: (p24>=0?'+':'')+p24.toFixed(2)+'%',
+    pts: Math.round(g4Signed), rawPts: g4, max: 5
+  });
+
+  /* ── GATE 5: Taker Flow (Binance) OR Basis (Bybit) ── */
+  let g5 = 0, g5Raw = '—';
+  if (a.exchange === 'Binance' && a.takerFlow) {
+    const bsr = a.takerFlow.buySellRatio;
+    g5Raw = 'B/S '+bsr.toFixed(3);
+    const bsrDev = Math.abs(bsr - 1);
+    if      (bsrDev > 0.4) g5 = 5;
+    else if (bsrDev > 0.25) g5 = 4;
+    else if (bsrDev > 0.15) g5 = 3;
+    else if (bsrDev > 0.08) g5 = 2;
+    else if (bsrDev > 0.03) g5 = 1;
+    // Aggressive buying + positive funding = more longs = SHORT confirmation → negative
+    // Aggressive selling + negative funding = more shorts = LONG confirmation → positive
+    const buyAggressive = bsr > 1;
+    const flowAligned = (isPos && buyAggressive) || (!isPos && !buyAggressive);
+    const g5Signed = flowAligned ? (isPos ? -g5 : g5) : (isPos ? g5*0.3 : -g5*0.3);
+    totalScore += Math.round(g5Signed);
+    gates.push({ label: 'FLOW', raw: g5Raw, pts: Math.round(g5Signed), rawPts: g5, max: 5 });
+  } else if (a.exchange === 'Bybit' && a.markPrice && a.indexPrice && a.indexPrice > 0) {
+    const basis = ((a.markPrice - a.indexPrice) / a.indexPrice) * 100;
+    g5Raw = 'BASIS '+(basis>=0?'+':'')+basis.toFixed(4)+'%';
+    const bAbs = Math.abs(basis);
+    if      (bAbs > 0.08) g5 = 5;
+    else if (bAbs > 0.05) g5 = 4;
+    else if (bAbs > 0.03) g5 = 3;
+    else if (bAbs > 0.015) g5 = 2;
+    else if (bAbs > 0.005) g5 = 1;
+    // Positive basis (futures > spot) + positive funding = confirms long crowding = SHORT signal
+    // Negative basis (futures < spot) + negative funding = confirms short crowding = LONG signal
+    const basisAligned = (isPos && basis > 0) || (!isPos && basis < 0);
+    const g5Signed = basisAligned ? (isPos ? -g5 : g5) : (isPos ? g5*0.4 : -g5*0.4);
+    totalScore += Math.round(g5Signed);
+    gates.push({ label: 'BASIS', raw: g5Raw, pts: Math.round(g5Signed), rawPts: g5, max: 5 });
+  } else {
+    gates.push({ label: 'BASIS', raw: '—', pts: 0, rawPts: 0, max: 5 });
+  }
+
+  /* ── Clamp score to ±25 ── */
+  totalScore = Math.max(-25, Math.min(25, totalScore));
+
+  /* ── Label assignment ── */
+  // totalScore > 0 = LONG opportunity (negative funding confirmed)
+  // totalScore < 0 = SHORT opportunity (positive funding confirmed)
+  const absScore = Math.abs(totalScore);
+  let label, labelCls;
+
+  const isOverheat = absF > 0.20;
+  if (isOverheat) {
+    label = 'OVERHEATED'; labelCls = 'overheat';
+  } else if (absScore >= 20) {
+    label = totalScore > 0 ? 'STRONG BUY' : 'STRONG SELL';
+    labelCls = totalScore > 0 ? 'buy' : 'sell';
+  } else if (absScore >= 14) {
+    label = 'WATCH'; labelCls = 'watch';
+  } else if (absScore >= 8) {
+    label = 'MIXED'; labelCls = 'mixed';
+  } else {
+    label = 'WEAK SIGNAL'; labelCls = 'weak';
+  }
+
+  /* ── Squeeze warning logic ── */
+  const warnings = [];
+  const buyRatio = ls ? ls.buyRatio : 0.5;
+  const sellRatio = ls ? ls.sellRatio : 0.5;
+  if (a.funding > 0.08 && buyRatio > 0.70)
+    warnings.push('⚠ CROWDED LONG — Long liquidation cascade risk if price reverses');
+  if (a.funding < -0.08 && sellRatio > 0.70)
+    warnings.push('⚠ CROWDED SHORT — Violent short squeeze possible');
+  if (absScore >= 20 && gates[4]?.pts !== undefined && Math.sign(gates[4].pts) !== Math.sign(totalScore))
+    warnings.push('⚠ FLOW DIVERGENCE — Strong signal but Gate 5 conflicts, watch for reversal');
+  if (absF > 0.20)
+    warnings.push('⚠ EXTREME FUNDING — High liquidation cascade risk regardless of direction');
+
+  return { ...a, totalScore, gates, label, labelCls, warnings };
+}
+
+/* ═══════════════════════════════════════════
+   THESIS BUILDER
+═══════════════════════════════════════════ */
+function buildThesis(a) {
+  const fStr = (a.funding>=0?'+':'')+a.funding.toFixed(4)+'%';
+  const pStr = (a.price24hPct>=0?'+':'')+a.price24hPct.toFixed(2)+'%';
+  const lsStr = a.lsRatio
+    ? (a.lsRatio.buyRatio*100).toFixed(1)+'% longs / '+(a.lsRatio.sellRatio*100).toFixed(1)+'% shorts'
+    : 'L/S unavailable';
+  const scoreStr = (a.totalScore > 0 ? '+' : '')+a.totalScore+'/25';
+
+  if (a.labelCls === 'buy')
+    return `Negative funding (${fStr}) means shorts are paying longs — bears are over-leveraged. ${lsStr}. Price ${pStr} confirms downside pressure exists. Short squeeze conditions building. Score ${scoreStr}.`;
+  if (a.labelCls === 'sell')
+    return `Positive funding (${fStr}) means longs are paying shorts — bulls are over-leveraged. ${lsStr}. Price ${pStr} confirms overbought conditions. Long liquidation cascade risk. Score ${scoreStr}.`;
+  if (a.labelCls === 'overheat')
+    return `Extreme funding at ${fStr} — market severely over-leveraged. ${lsStr}. Price ${pStr}. High risk of violent move in either direction. Approach with caution. Score ${scoreStr}.`;
+  if (a.labelCls === 'watch')
+    return `Moderate signal (score ${scoreStr}). Funding ${fStr}. ${lsStr}. Price ${pStr}. Confluence partially aligned — wait for additional confirmation before entry.`;
+  return `Weak or conflicting signals. Funding ${fStr}. ${lsStr}. Price ${pStr}. Score ${scoreStr}. No clear directional edge — skip this setup.`;
+}
+
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function fmtVol(v) {
+  if (v >= 1e9) return (v/1e9).toFixed(1)+'B';
+  if (v >= 1e6) return (v/1e6).toFixed(1)+'M';
+  if (v >= 1e3) return (v/1e3).toFixed(1)+'K';
+  return v.toFixed(0);
+}
+
+function nowStr() {
+  return new Date().toTimeString().slice(0,8);
+}
+
+/* ═══════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════ */
+function renderCards() {
+  const query = (document.getElementById('search-input')?.value || '').toUpperCase().trim();
+  let data = scanData.slice();
+
+  // Filter by label
+  if (currentFilter !== 'all') {
+    const map = {
+      buy:      d => d.labelCls === 'buy',
+      sell:     d => d.labelCls === 'sell',
+      watch:    d => d.labelCls === 'watch',
+      mixed:    d => d.labelCls === 'mixed',
+      weak:     d => d.labelCls === 'weak',
+      overheat: d => d.labelCls === 'overheat',
+    };
+    if (map[currentFilter]) data = data.filter(map[currentFilter]);
+  }
+
+  // Search
+  if (query) data = data.filter(d => d.symbol.toUpperCase().includes(query));
+
+  const grid = document.getElementById('cards-grid');
+  document.getElementById('meta-count').textContent = data.length + ' assets';
+
+  if (!data.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1; padding:40px 20px; text-align:center">
+      <div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase">No assets match filter</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = data.map((a, i) => buildCardHTML(a, i)).join('');
+
+  // Animate pips after render
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.pip-block').forEach((el, idx) => {
+      setTimeout(() => { el.style.transition = 'background 0.25s ease, box-shadow 0.25s ease'; }, idx * 15);
+    });
+  });
+}
+
+function buildCardHTML(a, idx) {
+  const delay = Math.min(idx * 40, 600);
+  const fSign = a.funding >= 0 ? '+' : '';
+  const fCls  = a.funding >= 0 ? 'pos' : 'neg';
+  const absScore = Math.abs(a.totalScore);
+  const scorePct = (absScore / 25) * 100;
+  const scoreCls = a.labelCls === 'buy' ? 'buy' : a.labelCls === 'sell' ? 'sell' : a.labelCls === 'watch' ? 'watch' : 'mix';
+  const scoreColor = a.totalScore > 0 ? 'pos' : a.totalScore < 0 ? 'neg' : 'neu';
+
+  /* badge html */
+  const badgeHtml = `<span class="card-badge badge-${a.labelCls}">${a.label}</span>`;
+
+  /* gate pips */
+  const pipsHtml = a.gates.map(g => {
+    const dir = g.pts > 0 ? 'buy' : g.pts < 0 ? 'sell' : '';
+    const litPips = g.rawPts;
+    const blocks = [1,2,3,4,5].map(n =>
+      `<div class="pip-block${n <= litPips ? ' lit-'+dir : ''}"></div>`
+    ).join('');
+    return `<div class="gate-pip">
+      <div class="pip-blocks">${blocks}</div>
+      <div class="pip-label">${g.label}</div>
+    </div>`;
+  }).join('');
+
+  /* detail rows */
+  const detailRows = a.gates.map(g => {
+    const sCls = g.pts > 0 ? 'pos' : g.pts < 0 ? 'neg' : 'neu';
+    const dir = g.pts > 0 ? 'buy' : g.pts < 0 ? 'sell' : '';
+    const miniPips = [1,2,3,4,5].map(n =>
+      `<span class="${n <= g.rawPts ? 'on-'+dir : ''}"></span>`
+    ).join('');
+    return `<div class="detail-row">
+      <div class="detail-gate-name">G${a.gates.indexOf(g)+1} ${g.label}</div>
+      <div class="detail-mid"><div class="detail-pip-mini">${miniPips}</div></div>
+      <div class="detail-gate-raw">${g.raw}</div>
+      <div class="detail-gate-score ${sCls}">${g.pts > 0 ? '+' : ''}${g.pts}</div>
+    </div>`;
+  }).join('');
+
+  /* warnings */
+  const warningsHtml = a.warnings.length
+    ? a.warnings.map(w => `<div class="detail-warning">${w}</div>`).join('')
+    : '';
+
+  /* thesis */
+  const thesis = buildThesis(a);
+
+  return `<div class="card" style="animation-delay:${delay}ms" onclick="toggleDetail(this)">
+    <div class="card-top">
+      <div>
+        <div class="card-sym">${a.symbol}</div>
+        <div class="card-ex">${a.exchange} · ${a.price > 0 ? '$'+a.price.toLocaleString(undefined,{maximumFractionDigits:4}) : '—'}</div>
+      </div>
+      ${badgeHtml}
+    </div>
+    <div class="card-funding">
+      <div class="card-rate ${fCls}">${fSign}${a.funding.toFixed(4)}%</div>
+      <div class="card-rate-label">funding rate</div>
+    </div>
+    <div class="card-score-row">
+      <div class="card-score-num ${scoreColor}">${a.totalScore > 0 ? '+' : ''}${a.totalScore}/25</div>
+      <div class="score-track"><div class="score-fill ${scoreCls}" style="width:${scorePct}%"></div></div>
+    </div>
+    <div class="card-gates">${pipsHtml}</div>
+    <div class="card-detail">
+      ${warningsHtml}
+      ${detailRows}
+      <div class="detail-thesis">${thesis}</div>
+    </div>
+  </div>`;
+}
+
+function toggleDetail(card) {
+  const detail = card.querySelector('.card-detail');
+  detail.classList.toggle('open');
+}
+
+/* ═══════════════════════════════════════════
+   MAIN SCAN
+═══════════════════════════════════════════ */
+async function runScan() {
+  const btn = document.getElementById('scan-btn');
+  const label = document.getElementById('scan-label');
+  btn.classList.add('loading');
+  label.textContent = 'SCANNING...';
+
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('cards-grid').innerHTML = '';
+  document.getElementById('idle-state') && (document.getElementById('idle-state').style.display = 'none');
+
+  try {
+    /* Phase 1: Bulk fetch */
+    setProgress(10, 'PHASE 1/3 — FETCHING MARKET DATA...');
+    const raw = currentEx === 'bybit' ? await fetchBybitBulk() : await fetchBinanceBulk();
+
+    if (!raw.length) throw new Error('No data returned from exchange API');
+
+    /* Phase 2: Funding gate */
+    setProgress(30, `PHASE 2/3 — FUNDING GATE (|rate| ≥ ${FUNDING_GATE}%)...`);
+    const gated = raw.filter(a => Math.abs(a.funding) >= FUNDING_GATE);
+    await new Promise(r => setTimeout(r, 150));
+
+    /* Phase 3: Enrich */
+    setProgress(45, `PHASE 3/3 — ENRICHING ${gated.length} GATED COINS...`);
+    for (let i = 0; i < gated.length; i += BATCH_SIZE) {
+      const batch = gated.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(async a => {
+        if (currentEx === 'bybit') {
+          a.lsRatio = await fetchBybitLS(a.fullSym);
+        } else {
+          const [ls, taker] = await Promise.all([fetchBinanceLS(a.fullSym), fetchBinanceTaker(a.fullSym)]);
+          a.lsRatio = ls;
+          a.takerFlow = taker;
+        }
+      }));
+      const pct = 45 + Math.round(((i + BATCH_SIZE) / gated.length) * 50);
+      setProgress(Math.min(pct, 95), `ENRICHED ${Math.min(i + BATCH_SIZE, gated.length)}/${gated.length}...`);
+    }
+
+    /* Score & sort by |score| desc */
+    scanData = gated.map(a => scoreAsset(a)).sort((a,b) => Math.abs(b.totalScore) - Math.abs(a.totalScore));
+    lastScanTs = nowStr();
+
+    setProgress(100, `COMPLETE — ${scanData.length} COINS ANALYSED`);
+
+    /* Update summary */
+    document.getElementById('s-total').textContent  = raw.length;
+    document.getElementById('s-gated').textContent  = gated.length;
+    document.getElementById('s-buy').textContent    = scanData.filter(d => d.labelCls === 'buy').length;
+    document.getElementById('s-sell').textContent   = scanData.filter(d => d.labelCls === 'sell').length;
+    document.getElementById('s-watch').textContent  = scanData.filter(d => d.labelCls === 'watch').length;
+    document.getElementById('s-mixed').textContent  = scanData.filter(d => d.labelCls === 'mixed').length;
+
+    /* Show UI elements */
+    document.getElementById('summary-strip').classList.add('visible');
+    document.getElementById('filter-bar').classList.add('visible');
+    document.getElementById('search-wrap').classList.add('visible');
+    document.getElementById('result-meta').classList.add('visible');
+    document.getElementById('meta-ts').textContent = 'LAST SCAN: ' + lastScanTs;
+
+    currentFilter = 'all';
+    setFilter('all');
+    renderCards();
+
+  } catch(e) {
+    document.getElementById('cards-grid').innerHTML = `<div style="padding:40px 20px; text-align:center">
+      <div style="font-size:0.65rem; color:var(--red); letter-spacing:0.12em; text-transform:uppercase">SCAN FAILED — ${e.message}</div>
+    </div>`;
+    setProgress(100, 'SCAN FAILED');
+  }
+
+  setTimeout(() => {
+    document.getElementById('progress-wrap').style.display = 'none';
+  }, 1200);
+
+  btn.classList.remove('loading');
+  label.textContent = 'RE-SCAN';
+}
+</script>
+</body>
+</html>
